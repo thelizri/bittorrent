@@ -1,0 +1,89 @@
+2024/07/17 02:18:00 Program arguments: [handshake sample.torrent 165.232.33.77:51467]
+ers-bittorrent-go/tmp/test.txt sample.torrent]
+2024/07/17 02:01:35 Torrent Details:
+2024/07/17 02:01:35 Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce
+2024/07/17 02:01:35 Info Hash: d69f91e6b2ae4c542468d1073a71d4ea13879a7f
+2024/07/17 02:01:35 File Length: 92063 bytes
+2024/07/17 02:01:35 Piece Length: 32768 bytes
+2024/07/17 02:01:35 Last Piece Length: 26527 bytes
+2024/07/17 02:01:35 Number of Pieces: 3
+2024/07/17 02:01:35 Piece Hashes:
+2024/07/17 02:01:35   Piece 0: e876f67a2a8886e8f36b136726c30fa29703022d
+2024/07/17 02:01:35   Piece 1: 6e2275e604a0766656736e81ff10b55204ad8d35
+2024/07/17 02:01:35   Piece 2: f00d937a0213df1982bc8d097227ad9e909acc17
+2024/07/17 02:01:35 Peer ID: 0000010102020303040405050606070708080909
+2024/07/17 02:01:35 Port: 6881
+2024/07/17 02:01:35 Uploaded: 0 bytes
+2024/07/17 02:01:35 Downloaded: 0 bytes
+2024/07/17 02:01:35 Left: 92063 bytes
+
+2024/07/17 02:01:35 Bitfield message: {0 5 [224]}
+2024/07/17 02:01:35 Unchoke message: {0 1 []}
+2024/07/17 02:01:35 
+Downloading piece 0, length 32768
+2024/07/17 02:01:35 Total blocks: 2
+2024/07/17 02:01:35 Fetching block 0/2
+2024/07/17 02:01:35 	Fetching piece 0, block 0, size 16384
+2024/07/17 02:01:35 		Creating payload for piece 0, block 0, size 16384, offset 0
+2024/07/17 02:01:35 		Payload: [0 0 0 0 0 0 0 0 0 0 64 0]
+2024/07/17 02:01:35 	Requesting piece 0, block 0, size 16384
+2024/07/17 02:01:35 	Awaiting response for piece 0, block 0
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 0, Offset: 0, Length: 16384
+2024/07/17 02:01:35 	Fetching piece 0, block 1, size 16384
+2024/07/17 02:01:35 		Creating payload for piece 0, block 1, size 16384, offset 16384
+2024/07/17 02:01:35 		Payload: [0 0 0 0 0 0 64 0 0 0 64 0]
+2024/07/17 02:01:35 	Requesting piece 0, block 1, size 16384
+2024/07/17 02:01:35 	Awaiting response for piece 0, block 1
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 0, Offset: 16384, Length: 16384
+2024/07/17 02:01:35 Downloaded piece 0
+2024/07/17 02:01:35 
+Downloading piece 1, length 32768
+2024/07/17 02:01:35 Total blocks: 2
+2024/07/17 02:01:35 Fetching block 0/2
+2024/07/17 02:01:35 	Fetching piece 1, block 0, size 16384
+2024/07/17 02:01:35 		Creating payload for piece 1, block 0, size 16384, offset 0
+2024/07/17 02:01:35 		Payload: [0 0 0 1 0 0 0 0 0 0 64 0]
+2024/07/17 02:01:35 	Requesting piece 1, block 0, size 16384
+2024/07/17 02:01:35 	Awaiting response for piece 1, block 0
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 1, Offset: 0, Length: 16384
+2024/07/17 02:01:35 	Fetching piece 1, block 1, size 16384
+2024/07/17 02:01:35 		Creating payload for piece 1, block 1, size 16384, offset 16384
+2024/07/17 02:01:35 		Payload: [0 0 0 1 0 0 64 0 0 0 64 0]
+2024/07/17 02:01:35 	Requesting piece 1, block 1, size 16384
+2024/07/17 02:01:35 	Awaiting response for piece 1, block 1
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 1, Offset: 16384, Length: 16384
+2024/07/17 02:01:35 Downloaded piece 1
+2024/07/17 02:01:35 
+Downloading piece 2, length 26527
+2024/07/17 02:01:35 Total blocks: 2
+2024/07/17 02:01:35 Fetching block 0/2
+2024/07/17 02:01:35 	Fetching piece 2, block 0, size 16384
+2024/07/17 02:01:35 		Creating payload for piece 2, block 0, size 16384, offset 0
+2024/07/17 02:01:35 		Payload: [0 0 0 2 0 0 0 0 0 0 64 0]
+2024/07/17 02:01:35 	Requesting piece 2, block 0, size 16384
+2024/07/17 02:01:35 	Awaiting response for piece 2, block 0
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 2, Offset: 0, Length: 16384
+2024/07/17 02:01:35 	Fetching piece 2, block 1, size 10143
+2024/07/17 02:01:35 		Creating payload for piece 2, block 1, size 10143, offset 16384
+2024/07/17 02:01:35 		Payload: [0 0 0 2 0 0 64 0 0 0 39 159]
+2024/07/17 02:01:35 	Requesting piece 2, block 1, size 10143
+2024/07/17 02:01:35 	Awaiting response for piece 2, block 1
+2024/07/17 02:01:35 	Received: ID 7, Length 0
+2024/07/17 02:01:35 	Index: 2, Offset: 16384, Length: 10143
+2024/07/17 02:01:35 Downloaded piece 2
+2024/07/17 02:01:35 Downloaded sample.torrent to /Users/william/Documents/codecrafters-bittorrent-go/tmp/test.txt.
+ex: 2, Offset: 16384, Length: 10143
+2024/07/17 01:08:44 Downloaded piece 2
+2024/07/17 01:08:44 -------------------------------------------------------------------------
+
+2024/07/17 01:08:44 Downloaded sample.torrent to /Users/william/Documents/codecrafters-bittorrent-go/tmp/test.txt.
+------------------------------------------------------------------------
+
+2024/07/17 00:52:10 Downloaded sample.torrent to /Users/william/Documents/codecrafters-bittorrent-go/tmp/test.txt.
+orrent-go/tmp/test.txt.
+iece-0.
