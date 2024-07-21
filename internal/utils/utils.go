@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -12,6 +13,15 @@ import (
 )
 
 const LINE_SEPARATOR string = "-------------------------------------------------------------------------"
+
+func LogSeparator() {
+	log.Printf("\n%s\n", LINE_SEPARATOR)
+}
+
+func LogAndPrint(message string) {
+	log.Println(message)
+	fmt.Println(message)
+}
 
 // bytesToPeerAddress converts a 6-byte array to an IP address and port.
 func BytesToPeerAddress(data []byte) (types.PeerAddress, error) {

@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 
 	"karlan/torrent/internal/bencode"
 	"karlan/torrent/internal/fileio"
@@ -26,7 +27,8 @@ const (
 )
 
 func main() {
-	setupLogging()
+	file := setupLogging()
+	defer file.Close()
 
 	if len(os.Args) < 2 {
 		fmt.Println("Command is required")
@@ -51,14 +53,14 @@ func main() {
 	}
 }
 
-func setupLogging() {
+func setupLogging() *os.File {
 	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatalf("Failed to open log file: %s", err)
 	}
-	defer file.Close()
 	log.SetOutput(file)
 	log.Printf("Program arguments: %v\n", os.Args[1:])
+	return file
 }
 
 func decodeCommand() {
@@ -118,7 +120,7 @@ func handshakeCommand() {
 func performHandshakeWithPeer(address, filePath string) {
 	torrent := fileio.ReadTorrentFile(filePath)
 	peer, _ := utils.StringToPeerAddress(address)
-	response, conn, err := network.PerformHandshake(&torrent, &peer)
+	response, conn, err := network.PerformHandshake(torrent, &peer)
 	if err != nil {
 		log.Fatalf("Error handshake: %v\n", err)
 	}
@@ -143,35 +145,22 @@ func printTorrentInfo(filePath string) {
 
 func printPeers(filePath string) {
 	torrent := fileio.ReadTorrentFile(filePath)
-	body := network.PerformTrackerRequest(&torrent)
+	body := network.PerformTrackerRequest(torrent)
 	peers := utils.ExtractPeersFromRespone(body)
 	for _, peer := range peers {
 		peer.Print()
 	}
 }
 
-func connectToPeer(torrent *types.Torrent, peers []types.PeerAddress) net.Conn {
-	for _, peer := range peers {
-		_, conn, err := network.PerformHandshake(torrent, &peer)
-		if err != nil {
-			log.Printf("Error connecting to peer: %v\n", err)
-			continue
-		} else {
-			fmt.Printf("Established connection with: %v\n", peer.GetAddress())
-			return conn
-		}
-	}
-	log.Println("Failed to establish connection with any peer.")
-	return nil
-}
-
 func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
+
 	torrent := fileio.ReadTorrentFile(torrentPath)
-	body := network.PerformTrackerRequest(&torrent)
+	body := network.PerformTrackerRequest(torrent)
 	peers := utils.ExtractPeersFromRespone(body)
 	torrent.Log()
+	utils.LogSeparator()
 
-	conn := connectToPeer(&torrent, peers)
+	conn := network.ConnectToPeer(torrent, peers)
 	if conn == nil {
 		return
 	}
@@ -194,33 +183,51 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 	}
 	log.Printf("Unchoke message: %v\n", message)
 
-	piece := network.FetchPiece(conn, torrent.GetPieceLength(pieceIndex), pieceIndex)
-	if err = hash.ValidatePieceHash(piece, torrent.PieceHashes[pieceIndex]); err != nil {
+	piece := network.FetchPiece(conn, torrent.File.GetPieceLength(pieceIndex), pieceIndex)
+	if err = hash.ValidatePieceHash(piece, torrent.File.PieceHashes[pieceIndex]); err != nil {
 		log.Printf("Error: %v\n", err)
 		return
 	}
 
 	fileio.WriteToAbsolutePath(outputPath, piece)
-	log.Printf("Piece %v downloaded to %v.\n", pieceIndex, outputPath)
-	fmt.Printf("Piece %v downloaded to %v.\n", pieceIndex, outputPath)
+	utils.LogSeparator()
+	utils.LogAndPrint(fmt.Sprintf("Piece %v downloaded to %v.\n", pieceIndex, outputPath))
+
 }
 
 func downloadFile(torrentPath, outputPath string) {
 	torrent := fileio.ReadTorrentFile(torrentPath)
-	body := network.PerformTrackerRequest(&torrent)
+	body := network.PerformTrackerRequest(torrent)
 	peers := utils.ExtractPeersFromRespone(body)
 	torrent.Log()
+	utils.LogSeparator()
 
-	conn := connectToPeer(&torrent, peers)
-	if conn == nil {
-		return
+	file := &torrent.File
+	queue := types.NewQueue[int]()
+	for i := 0; i < file.NumberOfPieces; i++ {
+		queue.Enqueue(i)
 	}
+
+	var wg sync.WaitGroup
+	connections := network.ConnectToPeers(torrent, peers)
+	for _, conn := range connections {
+		wg.Add(1)
+		go worker(conn, queue, file, &wg)
+	}
+	wg.Wait()
+
+	fileio.WriteToAbsolutePath(outputPath, file.Data)
+	utils.LogSeparator()
+	utils.LogAndPrint(fmt.Sprintf("Downloaded %v to %v.\n", torrentPath, outputPath))
+}
+
+func worker(conn net.Conn, queue *types.Queue[int], file *types.InfoDictionary, wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer conn.Close()
 
 	message, err := network.ListenForPeerMessage(conn, BITFIELD)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
 	log.Printf("Bitfield message: %v\n", message)
 
@@ -234,19 +241,5 @@ func downloadFile(torrentPath, outputPath string) {
 	}
 	log.Printf("Unchoke message: %v\n", message)
 
-	fileSlice := make([]byte, torrent.FileLength)
-	offset := 0
-	for pieceIndex := 0; pieceIndex < torrent.NumberOfPieces; pieceIndex++ {
-		piece := network.FetchPiece(conn, torrent.GetPieceLength(pieceIndex), pieceIndex)
-		if err = hash.ValidatePieceHash(piece, torrent.PieceHashes[pieceIndex]); err != nil {
-			log.Printf("Error: %v\n", err)
-			return
-		}
-		copy(fileSlice[offset:offset+len(piece)], piece)
-		offset += len(piece)
-	}
-
-	fileio.WriteToAbsolutePath(outputPath, fileSlice)
-	log.Printf("Downloaded %v to %v.\n", torrentPath, outputPath)
-	fmt.Printf("Downloaded %v to %v.\n", torrentPath, outputPath)
+	network.FetchFile(conn, queue, file)
 }

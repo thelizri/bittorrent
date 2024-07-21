@@ -6,11 +6,31 @@ import (
 	"math"
 	"net"
 
+	"karlan/torrent/internal/hash"
 	"karlan/torrent/internal/types"
+	"karlan/torrent/internal/utils"
 )
 
+func FetchFile(conn net.Conn, queue *types.Queue[int], file *types.InfoDictionary) {
+	for !queue.IsEmpty() {
+		pieceIndex, err := queue.Dequeue()
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+
+		utils.LogSeparator()
+		piece := FetchPiece(conn, file.GetPieceLength(pieceIndex), pieceIndex)
+		if err = hash.ValidatePieceHash(piece, file.PieceHashes[pieceIndex]); err != nil {
+			queue.Enqueue(pieceIndex)
+			log.Printf("Error: %v\n", err)
+			return
+		}
+		file.AddPiece(piece, pieceIndex)
+	}
+}
+
 func FetchPiece(conn net.Conn, pieceLength, pieceIndex int) []byte {
-	log.Printf("\nDownloading piece %d, length %d\n", pieceIndex, pieceLength)
+	log.Printf("Downloading piece %d, length %d\n", pieceIndex, pieceLength)
 	pieceData := make([]byte, pieceLength)
 	blockSize := BLOCK_SIZE
 	totalBlocks := int(math.Ceil(float64(pieceLength) / float64(blockSize)))

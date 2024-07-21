@@ -3,7 +3,6 @@ package hash
 import (
 	"bytes"
 	"crypto/sha1"
-	"errors"
 	"fmt"
 )
 
@@ -31,8 +30,7 @@ func CastHashTo2dByteSlice(piece_hashes interface{}) [][]byte {
 func ValidatePieceHash(piece []byte, pieceHash []byte) error {
 	hash := sha1.Sum(piece)
 	if !bytes.Equal(hash[:], pieceHash) {
-		error_message := fmt.Sprintf("Hashes are not matching:\n Expected: %x,\n Received: %x.\n", pieceHash, hash)
-		return errors.New(error_message)
+		return fmt.Errorf("Hashes are not matching:\n Expected: %x,\n Received: %x.\n", pieceHash, hash)
 	}
 	return nil
 }

@@ -4,10 +4,13 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"net"
+	"os"
 	"time"
 
 	"karlan/torrent/internal/types"
+	"karlan/torrent/internal/utils"
 )
 
 // Constants representing different message IDs used in the BitTorrent protocol.
@@ -24,6 +27,44 @@ const BLOCK_SIZE int = 16 * 1024
 // Handshake
 const protocolString string = "BitTorrent protocol"
 const reservedBytes int = 8
+
+func ConnectToPeer(torrent *types.Torrent, peers []types.PeerAddress) net.Conn {
+	for _, peer := range peers {
+		_, conn, err := PerformHandshake(torrent, &peer)
+		if err != nil {
+			log.Printf("Error connecting to peer: %v\n", err)
+			continue
+		} else {
+			utils.LogAndPrint(fmt.Sprintf("Established connection with: %v\n", peer.GetAddress()))
+			return conn
+		}
+	}
+	utils.LogAndPrint("Failed to establish connection with any peer.")
+	os.Exit(1)
+	return nil
+}
+
+func ConnectToPeers(torrent *types.Torrent, peers []types.PeerAddress) []net.Conn {
+	result := make([]net.Conn, 0)
+	for _, peer := range peers {
+		_, conn, err := PerformHandshake(torrent, &peer)
+		if err != nil {
+			log.Printf("Error connecting to peer: %v\n", err)
+			continue
+		} else {
+			fmt.Printf("Established connection with: %v\n", peer.GetAddress())
+			result = append(result, conn)
+		}
+	}
+
+	if len(result) > 0 {
+		return result
+	}
+
+	utils.LogAndPrint("Failed to establish connection with any peer.")
+	os.Exit(1)
+	return nil
+}
 
 func PerformHandshake(torrent *types.Torrent, peer *types.PeerAddress) ([]byte, net.Conn, error) {
 	// make handshake with peer
@@ -47,7 +88,7 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 	// Step 1: Establish a TCP connection to the peer
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
-		fmt.Println("Error connecting to peer:", err)
+		log.Println("Error connecting to peer:", err)
 		conn.Close()
 		return nil, nil, err
 	}
@@ -55,7 +96,7 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 	// Step 2: Send Message
 	_, err = conn.Write(handshake)
 	if err != nil {
-		fmt.Println("Error sending handshake:", err)
+		log.Println("Error sending handshake:", err)
 		conn.Close()
 		return nil, nil, err
 	}
@@ -64,7 +105,7 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 	response := make([]byte, len(handshake))
 	_, err = io.ReadFull(conn, response)
 	if err != nil {
-		fmt.Println("Error receiving handshake:", err)
+		log.Println("Error receiving handshake:", err)
 		conn.Close()
 		return nil, nil, err
 	}
@@ -76,7 +117,7 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 func SendMessageToPeer(conn net.Conn, message *types.PeerMessage) {
 	_, err := conn.Write(message.GetBytes())
 	if err != nil {
-		fmt.Println("Error:", err)
+		log.Println("Error:", err)
 		return
 	}
 }
