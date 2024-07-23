@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -63,22 +64,50 @@ func StringToPeerAddress(addr string) (types.PeerAddress, error) {
 	return types.PeerAddress{IP: ip, Port: uint16(port)}, nil
 }
 
-func ExtractPeersFromRespone(body []byte) []types.PeerAddress {
+func ExtractPeersFromResponse(body []byte) []types.PeerAddress {
 	// Decoding Body
 	encoding, _, err := bencode.Decode(string(body), 0)
 	if err != nil {
-		fmt.Println("Error decoding body:", err)
+		log.Println("Error decoding body:", err)
 		return nil
 	}
 
-	response := encoding.(map[string]interface{})
+	response, ok := encoding.(map[string]interface{})
+	if !ok {
+		log.Println("Error: Decoded response is not a map[string]interface{}")
+		return nil
+	}
 
-	bytes := []byte(response["peers"].(string))
+	_, ok = response["peers"]
+	if !ok {
+		log.Println("Error: 'peers' field not found")
+		return nil
+	}
+
+	peersStr, ok := response["peers"].(string)
+	if !ok {
+		log.Println("Error: 'peers' field is not a string")
+		return nil
+	}
+
+	bytes := []byte(peersStr)
+	if len(bytes)%6 != 0 {
+		log.Println("Error: 'peers' string length is not a multiple of 6")
+		return nil
+	}
+
 	peers := make([]types.PeerAddress, 0, len(bytes)/6)
 	for i := 0; i < len(bytes)/6; i++ {
-		peer, _ := BytesToPeerAddress(bytes[i*6 : (i+1)*6])
+		peerBytes := bytes[i*6 : (i+1)*6]
+		log.Printf("Extracting peer %d: %s", i, hex.EncodeToString(peerBytes))
+		peer, err := BytesToPeerAddress(peerBytes)
+		if err != nil {
+			log.Printf("Error converting bytes to PeerAddress: %v", err)
+			continue
+		}
 		peers = append(peers, peer)
 	}
 
+	log.Printf("Successfully extracted %d peers", len(peers))
 	return peers
 }

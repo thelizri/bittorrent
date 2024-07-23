@@ -1,6 +1,7 @@
 package types
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"karlan/torrent/internal/bencode"
@@ -42,11 +43,22 @@ func CreateTorrentStruct(dict map[string]interface{}) *Torrent {
 
 	torrent.File = *CreateInfoDictionary(infoDict)
 
+	//torrent.generatePeerID()
 	torrent.PeerID = []byte{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9}
+	fmt.Println(torrent.PeerID)
 	torrent.Port = 6881
 
 	torrent.Left = torrent.File.FileLength
 	return torrent
+}
+
+// When I use any other peer ID than 00112233445566778899 the program crashes. I don't why
+func (t *Torrent) generatePeerID() {
+	t.PeerID = make([]byte, 20)
+	_, err := rand.Read(t.PeerID)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (t *Torrent) GetPeerID() string {

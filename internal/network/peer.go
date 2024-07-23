@@ -13,15 +13,6 @@ import (
 	"karlan/torrent/internal/utils"
 )
 
-// Constants representing different message IDs used in the BitTorrent protocol.
-const (
-	BITFIELD   byte = 5 // Contains a bitfield representing the pieces the sender has
-	INTERESTED byte = 2 // Indicates the sender wants to download pieces from the recipient
-	UNCHOKE    byte = 1 // Indicates the sender will now allow the receiver to request pieces
-	REQUEST    byte = 6 // Requests a specific piece of data
-	PIECE      byte = 7 // Contains the actual data of the piece being sent
-)
-
 const BLOCK_SIZE int = 16 * 1024
 
 // Handshake
@@ -114,7 +105,7 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 }
 
 // Peer Messages
-func SendMessageToPeer(conn net.Conn, message *types.PeerMessage) {
+func SendMessageToPeer(conn net.Conn, message *types.Message) {
 	_, err := conn.Write(message.GetBytes())
 	if err != nil {
 		log.Println("Error:", err)
@@ -123,29 +114,30 @@ func SendMessageToPeer(conn net.Conn, message *types.PeerMessage) {
 }
 
 // Peer messages consist of a message length prefix (4 bytes), message id (1 byte) and a payload (variable size).
-func ListenForPeerMessage(conn net.Conn, expectedMessageID byte) (types.PeerMessage, error) {
+func ListenForPeerMessage(conn net.Conn, expectedMessageID types.MessageID) (types.Message, error) {
+	var zero types.Message
 	for {
 		//Set timeout
 		conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 		buffer := make([]byte, 4)
 		if _, err := io.ReadFull(conn, buffer); err != nil {
-			return types.PeerMessage{}, fmt.Errorf("cannot read message payload: %v", err)
+			return zero, fmt.Errorf("cannot read message payload: %v", err)
 		}
 
 		messageLength := binary.BigEndian.Uint32(buffer)
 		buffer = make([]byte, messageLength)
 		if _, err := io.ReadFull(conn, buffer); err != nil {
-			return types.PeerMessage{}, fmt.Errorf("cannot read message payload: %v", err)
+			return zero, fmt.Errorf("cannot read message payload: %v", err)
 		}
 
-		messageID := buffer[0]
+		messageID := types.MessageID(buffer[0])
 		if messageID != expectedMessageID {
-			fmt.Printf("Unexpected Message ID: %v, Expected: %v\n", messageID, expectedMessageID)
+			fmt.Printf("Unexpected Message ID: %v, Expected: %v\n", messageID.String(), expectedMessageID.String())
 			continue
 		}
 		payload := buffer[1:]
 
-		peer_message := types.PeerMessage{MessageID: messageID, Payload: payload}
+		peer_message := types.Message{MessageID: messageID, Payload: payload}
 		return peer_message, nil
 	}
 }

@@ -61,17 +61,17 @@ func WriteToAbsolutePath(filePath string, data []byte) {
 
 // read and decode torrent file. Returns a torrent struct
 func ReadTorrentFile(filePath string) *types.Torrent {
-
+	var zero types.Torrent
 	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("Error reading file: %v\n", err)
-		return &types.Torrent{}
+		return &zero
 	}
 
 	decoding, _, err := bencode.Decode(string(bytes), 0)
 	if err != nil {
 		fmt.Println(err)
-		return &types.Torrent{}
+		return &zero
 	}
 
 	dict := decoding.(map[string]interface{})

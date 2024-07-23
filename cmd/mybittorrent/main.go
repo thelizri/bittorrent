@@ -18,14 +18,6 @@ import (
 	"karlan/torrent/internal/utils"
 )
 
-const (
-	BITFIELD   byte = 5 // Contains a bitfield representing the pieces the sender has
-	INTERESTED byte = 2 // Indicates the sender wants to download pieces from the recipient
-	UNCHOKE    byte = 1 // Indicates the sender will now allow the receiver to request pieces
-	REQUEST    byte = 6 // Requests a specific piece of data
-	PIECE      byte = 7 // Contains the actual data of the piece being sent
-)
-
 func main() {
 	file := setupLogging()
 	defer file.Close()
@@ -146,7 +138,7 @@ func printTorrentInfo(filePath string) {
 func printPeers(filePath string) {
 	torrent := fileio.ReadTorrentFile(filePath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromRespone(body)
+	peers := utils.ExtractPeersFromResponse(body)
 	for _, peer := range peers {
 		peer.Print()
 	}
@@ -156,7 +148,7 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 
 	torrent := fileio.ReadTorrentFile(torrentPath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromRespone(body)
+	peers := utils.ExtractPeersFromResponse(body)
 	torrent.Log()
 	utils.LogSeparator()
 
@@ -166,17 +158,17 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 	}
 	defer conn.Close()
 
-	message, err := network.ListenForPeerMessage(conn, BITFIELD)
+	message, err := network.ListenForPeerMessage(conn, types.MSG_BITFIELD)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Printf("Bitfield message: %v\n", message)
 
-	message = types.PeerMessage{MessageID: INTERESTED}
+	message = types.Message{MessageID: types.MSG_INTERESTED}
 	network.SendMessageToPeer(conn, &message)
 
-	message, err = network.ListenForPeerMessage(conn, UNCHOKE)
+	message, err = network.ListenForPeerMessage(conn, types.MSG_UNCHOKE)
 	if err != nil {
 		log.Println(err)
 		return
@@ -198,12 +190,12 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 func downloadFile(torrentPath, outputPath string) {
 	torrent := fileio.ReadTorrentFile(torrentPath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromRespone(body)
+	peers := utils.ExtractPeersFromResponse(body)
 	torrent.Log()
 	utils.LogSeparator()
 
 	file := &torrent.File
-	queue := types.NewQueue[int]()
+	queue := types.NewQueue()
 	for i := 0; i < file.NumberOfPieces; i++ {
 		queue.Enqueue(i)
 	}
@@ -221,20 +213,20 @@ func downloadFile(torrentPath, outputPath string) {
 	utils.LogAndPrint(fmt.Sprintf("Downloaded %v to %v.\n", torrentPath, outputPath))
 }
 
-func worker(conn net.Conn, queue *types.Queue[int], file *types.InfoDictionary, wg *sync.WaitGroup) {
+func worker(conn net.Conn, queue *types.Queue, file *types.InfoDictionary, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer conn.Close()
 
-	message, err := network.ListenForPeerMessage(conn, BITFIELD)
+	message, err := network.ListenForPeerMessage(conn, types.MSG_BITFIELD)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Printf("Bitfield message: %v\n", message)
 
-	message = types.PeerMessage{MessageID: INTERESTED}
+	message = types.Message{MessageID: types.MSG_INTERESTED}
 	network.SendMessageToPeer(conn, &message)
 
-	message, err = network.ListenForPeerMessage(conn, UNCHOKE)
+	message, err = network.ListenForPeerMessage(conn, types.MSG_UNCHOKE)
 	if err != nil {
 		log.Println(err)
 		return

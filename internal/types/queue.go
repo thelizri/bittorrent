@@ -5,25 +5,25 @@ import (
 	"sync"
 )
 
-type Queue[T any] struct {
-	Elements []T
+type Queue struct {
+	Elements []int
 	mutex    sync.RWMutex
 }
 
-func NewQueue[T any]() *Queue[T] {
-	return &Queue[T]{
-		Elements: []T{},
+func NewQueue() *Queue {
+	return &Queue{
+		Elements: []int{},
 	}
 }
 
-func (q *Queue[T]) Enqueue(elem T) {
+func (q *Queue) Enqueue(elem int) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	q.Elements = append(q.Elements, elem)
 }
 
-func (q *Queue[T]) Dequeue() (T, error) {
-	var zero T // To return in case of underflow
+func (q *Queue) Dequeue() (int, error) {
+	var zero int // To return in case of underflow
 
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -41,23 +41,23 @@ func (q *Queue[T]) Dequeue() (T, error) {
 	return element, nil
 }
 
-func (q *Queue[T]) GetLength() int {
+func (q *Queue) GetLength() int {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
 	return len(q.Elements)
 }
 
-func (q *Queue[T]) IsEmpty() bool {
+func (q *Queue) IsEmpty() bool {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
 	return len(q.Elements) == 0
 }
 
-func (q *Queue[T]) Peek() (T, error) {
+func (q *Queue) Peek() (int, error) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
 
-	var zero T // To return in case of empty queue
+	var zero int // To return in case of empty queue
 	if len(q.Elements) == 0 {
 		return zero, errors.New("empty queue")
 	}

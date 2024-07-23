@@ -11,7 +11,7 @@ import (
 	"karlan/torrent/internal/utils"
 )
 
-func FetchFile(conn net.Conn, queue *types.Queue[int], file *types.InfoDictionary) {
+func FetchFile(conn net.Conn, queue *types.Queue, file *types.InfoDictionary) {
 	for !queue.IsEmpty() {
 		pieceIndex, err := queue.Dequeue()
 		if err != nil {
@@ -54,16 +54,16 @@ func FetchPiece(conn net.Conn, pieceLength, pieceIndex int) []byte {
 
 func fetchBlock(conn net.Conn, pieceIndex, blockNumber, blockSize, offset int) []byte {
 	log.Printf("\tFetching piece %v, block %v, size %v\n", pieceIndex, blockNumber, blockSize)
-	msg := types.PeerMessage{MessageID: REQUEST, Payload: createPayload(pieceIndex, blockNumber, blockSize, offset)}
+	msg := types.Message{MessageID: types.MSG_REQUEST, Payload: createPayload(pieceIndex, blockNumber, blockSize, offset)}
 	log.Printf("\tRequesting piece %v, block %v, size %v\n", pieceIndex, blockNumber, blockSize)
 	SendMessageToPeer(conn, &msg)
 	log.Printf("\tAwaiting response for piece %v, block %v\n", pieceIndex, blockNumber)
-	msg, err := ListenForPeerMessage(conn, PIECE)
+	msg, err := ListenForPeerMessage(conn, types.MSG_PIECE)
 	if err != nil {
 		log.Println("\tPeer message error:", err)
 		return nil
 	}
-	log.Printf("\tReceived: ID %v, Length %v\n", msg.MessageID, msg.MessageLength)
+	log.Printf("\tReceived: ID %v, Length %v\n", msg.MessageID, msg.GetLength())
 	pieceIndex = int(binary.BigEndian.Uint32(msg.Payload[:4]))
 	blockOffset := int(binary.BigEndian.Uint32(msg.Payload[4:8]))
 	log.Printf("\tIndex: %v, Offset: %v, Length: %v\n", pieceIndex, blockOffset, len(msg.Payload[8:]))
