@@ -54,7 +54,8 @@ func (p *Message) GetLength() uint32 {
 	return uint32(1 + len(p.Payload))
 }
 
-func (p *Message) GetBytes() []byte {
+// <length><messageid><payload>
+func (p *Message) Serialize() []byte {
 	buffer := make([]byte, 5+len(p.Payload))
 	binary.BigEndian.PutUint32(buffer, p.GetLength())
 	buffer[4] = byte(p.MessageID)

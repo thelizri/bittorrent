@@ -13,10 +13,11 @@ import (
 type Torrent struct {
 	Announce string // URL of the torrent tracker
 	InfoHash []byte // SHA1 hash of the 'info' section of the torrent file
-	File     InfoDictionary
+	FileInfo InfoDictionary
 
 	Comment string // Comments about the torrent
 	Creator string // Software used to create the torrent
+	Date    int    // Date created
 
 	PeerID []byte // Peer ID for this client
 	Port   int    // Port number this client is listening on
@@ -40,15 +41,16 @@ func CreateTorrentStruct(dict map[string]interface{}) *Torrent {
 	if creator, ok := dict["created by"].(string); ok {
 		torrent.Creator = creator
 	}
+	if date, ok := dict["creation date"].(int); ok {
+		torrent.Date = date
+	}
 
-	torrent.File = *CreateInfoDictionary(infoDict)
+	torrent.FileInfo = *CreateInfoDictionary(infoDict)
 
-	//torrent.generatePeerID()
-	torrent.PeerID = []byte{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9}
-	fmt.Println(torrent.PeerID)
+	torrent.generatePeerID()
 	torrent.Port = 6881
 
-	torrent.Left = torrent.File.FileLength
+	torrent.Left = torrent.FileInfo.FileLength
 	return torrent
 }
 
@@ -61,22 +63,21 @@ func (t *Torrent) generatePeerID() {
 	}
 }
 
-func (t *Torrent) GetPeerID() string {
-	var str string
-	for _, b := range t.PeerID {
-		str += string(b + '0')
-	}
-	return str
-}
-
 func (t *Torrent) Print() {
 	fmt.Printf("Torrent Details:\n")
 	fmt.Printf("Tracker URL: %s\n", t.Announce)
 	fmt.Printf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash))
-	fmt.Printf("Comment: %s\n", t.Comment)
-	fmt.Printf("Creator: %s\n", t.Creator)
-	t.File.Print()
-	fmt.Printf("Peer ID: %s\n", t.GetPeerID())
+	if t.Comment != "" {
+		fmt.Printf("Comment: %s\n", t.Comment)
+	}
+	if t.Creator != "" {
+		fmt.Printf("Creator: %s\n", t.Creator)
+	}
+	if t.Date != 0 {
+		fmt.Printf("Creation Date: %d\n", t.Date)
+	}
+	t.FileInfo.Print()
+	fmt.Printf("Peer ID: %s\n", hex.EncodeToString(t.PeerID))
 	fmt.Printf("Port: %d\n", t.Port)
 	fmt.Printf("Uploaded: %d bytes\n", t.Uploaded)
 	fmt.Printf("Downloaded: %d bytes\n", t.Downloaded)
@@ -87,10 +88,17 @@ func (t *Torrent) Log() {
 	log.Printf("Torrent Details:\n")
 	log.Printf("Tracker URL: %s\n", t.Announce)
 	log.Printf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash))
-	log.Printf("Comment: %s\n", t.Comment)
-	log.Printf("Creator: %s\n", t.Creator)
-	t.File.Log()
-	log.Printf("Peer ID: %s\n", t.GetPeerID())
+	if t.Comment != "" {
+		log.Printf("Comment: %s\n", t.Comment)
+	}
+	if t.Creator != "" {
+		log.Printf("Creator: %s\n", t.Creator)
+	}
+	if t.Date != 0 {
+		log.Printf("Creation Date: %d\n", t.Date)
+	}
+	t.FileInfo.Log()
+	log.Printf("Peer ID: %s\n", hex.EncodeToString(t.PeerID))
 	log.Printf("Port: %d\n", t.Port)
 	log.Printf("Uploaded: %d bytes\n", t.Uploaded)
 	log.Printf("Downloaded: %d bytes\n", t.Downloaded)

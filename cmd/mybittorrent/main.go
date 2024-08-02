@@ -138,7 +138,8 @@ func printTorrentInfo(filePath string) {
 func printPeers(filePath string) {
 	torrent := fileio.ReadTorrentFile(filePath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromResponse(body)
+	interval, peers := utils.ExtractPeersFromResponse(body)
+	fmt.Printf("Interval: %v\n", interval)
 	for _, peer := range peers {
 		peer.Print()
 	}
@@ -148,7 +149,7 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 
 	torrent := fileio.ReadTorrentFile(torrentPath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromResponse(body)
+	_, peers := utils.ExtractPeersFromResponse(body)
 	torrent.Log()
 	utils.LogSeparator()
 
@@ -163,7 +164,7 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 		log.Println(err)
 		return
 	}
-	log.Printf("Bitfield message: %v\n", message)
+	log.Printf("Bitfield message: %b\n", message.Payload)
 
 	message = types.Message{MessageID: types.MSG_INTERESTED}
 	network.SendMessageToPeer(conn, &message)
@@ -175,8 +176,8 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 	}
 	log.Printf("Unchoke message: %v\n", message)
 
-	piece := network.FetchPiece(conn, torrent.File.GetPieceLength(pieceIndex), pieceIndex)
-	if err = hash.ValidatePieceHash(piece, torrent.File.PieceHashes[pieceIndex]); err != nil {
+	piece := network.FetchPiece(conn, torrent.FileInfo.GetPieceLength(pieceIndex), pieceIndex)
+	if err = hash.ValidatePieceHash(piece, torrent.FileInfo.PieceHashes[pieceIndex]); err != nil {
 		log.Printf("Error: %v\n", err)
 		return
 	}
@@ -190,11 +191,11 @@ func downloadPiece(torrentPath, outputPath string, pieceIndex int) {
 func downloadFile(torrentPath, outputPath string) {
 	torrent := fileio.ReadTorrentFile(torrentPath)
 	body := network.PerformTrackerRequest(torrent)
-	peers := utils.ExtractPeersFromResponse(body)
+	_, peers := utils.ExtractPeersFromResponse(body)
 	torrent.Log()
 	utils.LogSeparator()
 
-	file := &torrent.File
+	file := &torrent.FileInfo
 	queue := types.NewQueue()
 	for i := 0; i < file.NumberOfPieces; i++ {
 		queue.Enqueue(i)
@@ -221,7 +222,7 @@ func worker(conn net.Conn, queue *types.Queue, file *types.InfoDictionary, wg *s
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("Bitfield message: %v\n", message)
+	log.Printf("Bitfield message: %b\n", message)
 
 	message = types.Message{MessageID: types.MSG_INTERESTED}
 	network.SendMessageToPeer(conn, &message)

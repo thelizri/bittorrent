@@ -100,9 +100,11 @@ func (f *InfoDictionary) Print() {
 	fmt.Printf("\tPiece Length: %d bytes\n", f.PieceLength)
 	fmt.Printf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
 	fmt.Printf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
-	fmt.Printf("\tPiece Hashes:\n")
-	for i, hash := range f.PieceHashes {
-		fmt.Printf("\t\tPiece %d: %x\n", i, hash)
+	if f.NumberOfPieces < 10 {
+		fmt.Printf("\tPiece Hashes:\n")
+		for i, hash := range f.PieceHashes {
+			fmt.Printf("\t\tPiece %d: %x\n", i, hash)
+		}
 	}
 
 	if f.Type == MULTI {
@@ -121,9 +123,11 @@ func (f *InfoDictionary) Log() {
 	log.Printf("\tPiece Length: %d bytes\n", f.PieceLength)
 	log.Printf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
 	log.Printf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
-	log.Printf("\tPiece Hashes:\n")
-	for i, hash := range f.PieceHashes {
-		log.Printf("\t\tPiece %d: %x\n", i, hash)
+	if f.NumberOfPieces < 10 {
+		log.Printf("\tPiece Hashes:\n")
+		for i, hash := range f.PieceHashes {
+			log.Printf("\t\tPiece %d: %x\n", i, hash)
+		}
 	}
 
 	if f.Type == MULTI {

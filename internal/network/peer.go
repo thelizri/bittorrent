@@ -60,7 +60,9 @@ func ConnectToPeers(torrent *types.Torrent, peers []types.PeerAddress) []net.Con
 func PerformHandshake(torrent *types.Torrent, peer *types.PeerAddress) ([]byte, net.Conn, error) {
 	// make handshake with peer
 	handshake := createHandshake(torrent.InfoHash, torrent.PeerID)
+	log.Printf("Handshake: %v\n", handshake)
 	response, conn, err := sendHandshake(peer.GetAddress(), handshake)
+	log.Printf("Response: %v\n", response)
 	return response, conn, err
 }
 
@@ -106,7 +108,8 @@ func sendHandshake(address string, handshake []byte) ([]byte, net.Conn, error) {
 
 // Peer Messages
 func SendMessageToPeer(conn net.Conn, message *types.Message) {
-	_, err := conn.Write(message.GetBytes())
+	log.Printf("Send Message To Peer. Message ID: %v\n", message.MessageID.String())
+	_, err := conn.Write(message.Serialize())
 	if err != nil {
 		log.Println("Error:", err)
 		return
@@ -132,7 +135,7 @@ func ListenForPeerMessage(conn net.Conn, expectedMessageID types.MessageID) (typ
 
 		messageID := types.MessageID(buffer[0])
 		if messageID != expectedMessageID {
-			fmt.Printf("Unexpected Message ID: %v, Expected: %v\n", messageID.String(), expectedMessageID.String())
+			log.Printf("Unexpected Message ID: %v, Expected: %v\n", messageID.String(), expectedMessageID.String())
 			continue
 		}
 		payload := buffer[1:]

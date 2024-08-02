@@ -64,36 +64,48 @@ func StringToPeerAddress(addr string) (types.PeerAddress, error) {
 	return types.PeerAddress{IP: ip, Port: uint16(port)}, nil
 }
 
-func ExtractPeersFromResponse(body []byte) []types.PeerAddress {
+func ExtractPeersFromResponse(body []byte) (int, []types.PeerAddress) {
 	// Decoding Body
 	encoding, _, err := bencode.Decode(string(body), 0)
 	if err != nil {
 		log.Println("Error decoding body:", err)
-		return nil
+		return 0, nil
 	}
 
 	response, ok := encoding.(map[string]interface{})
 	if !ok {
 		log.Println("Error: Decoded response is not a map[string]interface{}")
-		return nil
+		return 0, nil
+	}
+
+	_, ok = response["interval"]
+	if !ok {
+		log.Println("Error: 'interval' field not found")
+		return 0, nil
+	}
+
+	interval, ok := response["interval"].(int)
+	if !ok {
+		log.Println("Error: 'interval' field is not an int")
+		return 0, nil
 	}
 
 	_, ok = response["peers"]
 	if !ok {
 		log.Println("Error: 'peers' field not found")
-		return nil
+		return 0, nil
 	}
 
 	peersStr, ok := response["peers"].(string)
 	if !ok {
 		log.Println("Error: 'peers' field is not a string")
-		return nil
+		return 0, nil
 	}
 
 	bytes := []byte(peersStr)
 	if len(bytes)%6 != 0 {
 		log.Println("Error: 'peers' string length is not a multiple of 6")
-		return nil
+		return 0, nil
 	}
 
 	peers := make([]types.PeerAddress, 0, len(bytes)/6)
@@ -109,5 +121,5 @@ func ExtractPeersFromResponse(body []byte) []types.PeerAddress {
 	}
 
 	log.Printf("Successfully extracted %d peers", len(peers))
-	return peers
+	return interval, peers
 }
