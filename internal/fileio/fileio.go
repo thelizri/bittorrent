@@ -1,13 +1,9 @@
 package fileio
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-
-	"karlan/torrent/internal/bencode"
-	"karlan/torrent/internal/types"
 )
 
 func WriteToRelativePath(filePath string, data []byte) {
@@ -57,23 +53,4 @@ func WriteToAbsolutePath(filePath string, data []byte) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// read and decode torrent file. Returns a torrent struct
-func ReadTorrentFile(filePath string) *types.Torrent {
-	var zero types.Torrent
-	bytes, err := os.ReadFile(filePath)
-	if err != nil {
-		fmt.Printf("Error reading file: %v\n", err)
-		return &zero
-	}
-
-	decoding, _, err := bencode.Decode(string(bytes), 0)
-	if err != nil {
-		fmt.Println(err)
-		return &zero
-	}
-
-	dict := decoding.(map[string]interface{})
-	return types.CreateTorrentStruct(dict)
 }

@@ -1,4 +1,4 @@
-package types
+package queue
 
 import (
 	"errors"
@@ -10,9 +10,15 @@ type Queue struct {
 	mutex    sync.RWMutex
 }
 
-func NewQueue() *Queue {
+// NewQueue initializes a new Queue with elements from 0 up to n-1
+func NewQueue(n int) *Queue {
+	elements := make([]int, n) // Pre-allocate a slice of size n
+	for i := 0; i < n; i++ {
+		elements[i] = i
+	}
+
 	return &Queue{
-		Elements: []int{},
+		Elements: elements,
 	}
 }
 

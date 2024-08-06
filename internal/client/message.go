@@ -1,4 +1,4 @@
-package types
+package client
 
 import (
 	"encoding/binary"
@@ -50,20 +50,49 @@ type Message struct {
 	Payload   []byte    // The payload of the message
 }
 
-func (p *Message) GetLength() uint32 {
+func (p *Message) length() uint32 {
 	return uint32(1 + len(p.Payload))
 }
 
-// <length><messageid><payload>
+// <length:4><messageid:1><payload:variable>
 func (p *Message) Serialize() []byte {
 	buffer := make([]byte, 5+len(p.Payload))
-	binary.BigEndian.PutUint32(buffer, p.GetLength())
+	binary.BigEndian.PutUint32(buffer, p.length())
 	buffer[4] = byte(p.MessageID)
-	copy(buffer[5:], p.Payload)
+
+	if p.Payload != nil {
+		copy(buffer[5:], p.Payload)
+	}
 
 	return buffer
 }
 
 func (p *Message) Log() {
-	log.Printf("Length: %v, ID: %v", p.GetLength(), p.MessageID)
+	log.Printf("Length: %v, ID: %v", p.length(), p.MessageID)
+}
+
+func (p *Message) FormatHave(index int) {
+	p.Payload = make([]byte, 4)
+	binary.BigEndian.PutUint32(p.Payload, uint32(index))
+}
+
+func (p *Message) FormatRequest(pieceIndex, offset, blockSize int) {
+	p.Payload = make([]byte, 12)
+	binary.BigEndian.PutUint32(p.Payload[0:4], uint32(pieceIndex))
+	binary.BigEndian.PutUint32(p.Payload[4:8], uint32(offset))
+	binary.BigEndian.PutUint32(p.Payload[8:12], uint32(blockSize))
+}
+
+func (p *Message) FormatPiece(pieceIndex, offset int, piece []byte) {
+	p.Payload = make([]byte, 8+len(p.Payload))
+	binary.BigEndian.PutUint32(p.Payload[0:4], uint32(pieceIndex))
+	binary.BigEndian.PutUint32(p.Payload[4:8], uint32(offset))
+	copy(p.Payload[8:], piece)
+}
+
+func (p *Message) FormatCancel(pieceIndex, offset, blockSize int) {
+	p.Payload = make([]byte, 12)
+	binary.BigEndian.PutUint32(p.Payload[0:4], uint32(pieceIndex))
+	binary.BigEndian.PutUint32(p.Payload[4:8], uint32(offset))
+	binary.BigEndian.PutUint32(p.Payload[8:12], uint32(blockSize))
 }

@@ -1,26 +1,25 @@
-package types
+package torrent
 
 import (
 	"fmt"
 	"karlan/torrent/internal/hash"
+	"karlan/torrent/internal/utils"
 	"log"
-	"sync"
 )
 
 const MULTI = "Multi-File Torrent"
 const SINGLE = "Single-File Torrent"
 
-type InfoDictionary struct {
+type TorrentDictionary struct {
 	Data            []byte
 	Type            string
-	Name            string   // Name of the file (for single-file) or root directory (for multi-file)
-	FileLength      int      // Length of the file, single file torrent
-	PieceLength     int      // Length of each piece
-	LastPieceLength int      // Length of last piece
-	NumberOfPieces  int      // Number of pieces
-	PieceHashes     [][]byte // SHA1 hashes of each piece
-	Files           []File   // List of files for multitorrent
-	mutex           sync.RWMutex
+	Name            string     // Name of the file (for single-file) or root directory (for multi-file)
+	FileLength      int        // Length of the file, single file torrent
+	PieceLength     int        // Length of each piece
+	LastPieceLength int        // Length of last piece
+	NumberOfPieces  int        // Number of pieces
+	PieceHashes     [][20]byte // SHA1 hashes of each piece
+	Files           []File     // List of files for multitorrent
 }
 
 type File struct {
@@ -28,8 +27,8 @@ type File struct {
 	Path   []string
 }
 
-func CreateInfoDictionary(infoDict map[string]interface{}) *InfoDictionary {
-	infoDictionaryStruct := &InfoDictionary{}
+func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
+	infoDictionaryStruct := &TorrentDictionary{}
 
 	infoDictionaryStruct.Name = infoDict["name"].(string)
 	infoDictionaryStruct.PieceLength = infoDict["piece length"].(int)
@@ -77,7 +76,7 @@ func CreateInfoDictionary(infoDict map[string]interface{}) *InfoDictionary {
 	return infoDictionaryStruct
 }
 
-func (f *InfoDictionary) GetPieceLength(index int) int {
+func (f *TorrentDictionary) GetPieceLength(index int) int {
 	if index == f.NumberOfPieces-1 {
 		return f.LastPieceLength
 	} else {
@@ -85,37 +84,35 @@ func (f *InfoDictionary) GetPieceLength(index int) int {
 	}
 }
 
-func (f *InfoDictionary) AddPiece(piece []byte, pieceIndex int) {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
+func (f *TorrentDictionary) AddPiece(piece []byte, pieceIndex int) {
 	offset := f.PieceLength * pieceIndex
 	copy(f.Data[offset:offset+len(piece)], piece)
 }
 
-func (f *InfoDictionary) Print() {
-	fmt.Printf("\tFile Details:\n")
-	fmt.Printf("\tName: %s\n", f.Name)
-	fmt.Printf("\tType: %s\n", f.Type)
-	fmt.Printf("\tFile Length: %d bytes\n", f.FileLength)
-	fmt.Printf("\tPiece Length: %d bytes\n", f.PieceLength)
-	fmt.Printf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
-	fmt.Printf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
+func (f *TorrentDictionary) Print() {
+	utils.LogAndPrintf("\tFile Details:\n")
+	utils.LogAndPrintf("\tName: %s\n", f.Name)
+	utils.LogAndPrintf("\tType: %s\n", f.Type)
+	utils.LogAndPrintf("\tFile Length: %d bytes\n", f.FileLength)
+	utils.LogAndPrintf("\tPiece Length: %d bytes\n", f.PieceLength)
+	utils.LogAndPrintf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
+	utils.LogAndPrintf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
 	if f.NumberOfPieces < 10 {
-		fmt.Printf("\tPiece Hashes:\n")
+		utils.LogAndPrintf("\tPiece Hashes:\n")
 		for i, hash := range f.PieceHashes {
-			fmt.Printf("\t\tPiece %d: %x\n", i, hash)
+			utils.LogAndPrintf("\t\tPiece %d: %x\n", i, hash)
 		}
 	}
 
 	if f.Type == MULTI {
-		fmt.Printf("\tFiles:\n")
+		utils.LogAndPrintf("\tFiles:\n")
 		for _, file := range f.Files {
-			fmt.Printf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
+			utils.LogAndPrintf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
 }
 
-func (f *InfoDictionary) Log() {
+func (f *TorrentDictionary) Log() {
 	log.Printf("\tFile Details:\n")
 	log.Printf("\tName: %s\n", f.Name)
 	log.Printf("\tType: %s\n", f.Type)
@@ -136,4 +133,27 @@ func (f *InfoDictionary) Log() {
 			log.Printf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
+}
+
+func (f *TorrentDictionary) VerifyIntegrityOfEachPiece() bool {
+	for i := 0; i < f.NumberOfPieces-1; i++ {
+		start := f.PieceLength * i
+		end := start + f.PieceLength
+		piece := f.Data[start:end]
+		err := hash.ValidatePieceHash(piece, f.PieceHashes[i])
+		if err != nil {
+			utils.LogAndPrintln(err.Error())
+			return false
+		}
+	}
+
+	start := f.PieceLength * (f.NumberOfPieces - 1)
+	piece := f.Data[start:]
+	err := hash.ValidatePieceHash(piece, f.PieceHashes[(f.NumberOfPieces-1)])
+	if err != nil {
+		utils.LogAndPrintln(err.Error())
+		return false
+	}
+
+	return true
 }
