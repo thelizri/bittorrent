@@ -44,14 +44,14 @@ func (h *Handshake) string() string {
 }
 
 // newHandshake creates a new handshake message
-func newHandshake(infoHash, peerID []byte) *Handshake {
-	utils.LogAndPrintf("Creating new handshake: InfoHash=%s, PeerID=%s\n", hex.EncodeToString(infoHash), hex.EncodeToString(peerID))
+func newHandshake(infoHash, peerID [20]byte) *Handshake {
+	utils.LogAndPrintf("Creating new handshake: InfoHash=%s, PeerID=%s\n", hex.EncodeToString(infoHash[:]), hex.EncodeToString(peerID[:]))
 	hs := &Handshake{
 		Length:   protocolLength,
 		Protocol: protocolString,
 	}
-	copy(hs.InfoHash[:], infoHash)
-	copy(hs.PeerID[:], peerID)
+	hs.InfoHash = infoHash
+	hs.PeerID = peerID
 	return hs
 }
 

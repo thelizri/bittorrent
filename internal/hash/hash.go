@@ -7,11 +7,6 @@ import (
 	"karlan/torrent/internal/utils"
 )
 
-func CalcSha1Hash(encoding string) []byte {
-	hash := sha1.Sum([]byte(encoding))
-	return hash[:]
-}
-
 func CastHashTo2dByteSlice(piece_hashes interface{}) [][20]byte {
 	hash, ok := piece_hashes.(string)
 	if !ok {

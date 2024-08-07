@@ -32,7 +32,7 @@ func (c *Client) Address() string {
 	return address
 }
 
-func (c *Client) Init(infoHash, peerID []byte) error {
+func (c *Client) Init(infoHash, peerID [20]byte) error {
 	utils.LogAndPrintf("Initializing client: InfoHash=%x, PeerID=%x\n", infoHash, peerID)
 	handshake := newHandshake(infoHash, peerID)
 	handshake.log()

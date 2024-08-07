@@ -2,10 +2,10 @@ package torrent
 
 import (
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"karlan/torrent/internal/bencode"
-	"karlan/torrent/internal/hash"
 	"karlan/torrent/internal/utils"
 	"os"
 	"sync"
@@ -13,16 +13,16 @@ import (
 
 // Torrent holds the decoded information from a .torrent file.
 type Torrent struct {
-	Announce string // URL of the torrent tracker
-	InfoHash []byte // SHA1 hash of the 'info' section of the torrent file
+	Announce string   // URL of the torrent tracker
+	InfoHash [20]byte // SHA1 hash of the 'info' section of the torrent file
 	FileInfo TorrentDictionary
 
 	Comment string // Comments about the torrent
 	Creator string // Software used to create the torrent
 	Date    int    // Date created
 
-	PeerID []byte // Peer ID for this client
-	Port   int    // Port number this client is listening on
+	PeerID [20]byte // Peer ID for this client
+	Port   int      // Port number this client is listening on
 
 	Uploaded   int // Total uploaded data in bytes
 	Downloaded int // Total downloaded data in bytes
@@ -53,7 +53,7 @@ func createTorrentStruct(dict map[string]interface{}) *Torrent {
 
 	torrent := &Torrent{}
 	torrent.Announce = dict["announce"].(string)
-	torrent.InfoHash = hash.CalcSha1Hash(bencode.Encode(dict["info"]))
+	torrent.InfoHash = hashInfoDictionary(bencode.Encode(dict["info"]))
 
 	if comment, ok := dict["comment"].(string); ok {
 		torrent.Comment = comment
@@ -75,20 +75,26 @@ func createTorrentStruct(dict map[string]interface{}) *Torrent {
 	return torrent
 }
 
+func hashInfoDictionary(encoding string) [20]byte {
+	hash := sha1.Sum([]byte(encoding))
+	return hash
+}
+
 // When I use any other peer ID than 00112233445566778899 the program crashes. I don't why
 func (t *Torrent) generatePeerID() {
-	t.PeerID = make([]byte, 20)
-	_, err := rand.Read(t.PeerID)
+	peerID := make([]byte, 20)
+	_, err := rand.Read(peerID)
 	if err != nil {
 		utils.LogAndPrintf("Generate peer id: %s", err)
 	}
+	t.PeerID = [20]byte(peerID)
 }
 
 func (t *Torrent) Print() {
 	utils.LogSeparator()
 	utils.LogAndPrintf("Torrent Details:\n")
 	utils.LogAndPrintf("Tracker URL: %s\n", t.Announce)
-	utils.LogAndPrintf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash))
+	utils.LogAndPrintf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
 	if t.Comment != "" {
 		utils.LogAndPrintf("Comment: %s\n", t.Comment)
 	}
@@ -99,7 +105,7 @@ func (t *Torrent) Print() {
 		utils.LogAndPrintf("Creation Date: %d\n", t.Date)
 	}
 	t.FileInfo.Print()
-	utils.LogAndPrintf("Peer ID: %s\n", hex.EncodeToString(t.PeerID))
+	utils.LogAndPrintf("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
 	utils.LogAndPrintf("Port: %d\n", t.Port)
 	utils.LogAndPrintf("Uploaded: %d bytes\n", t.Uploaded)
 	utils.LogAndPrintf("Downloaded: %d bytes\n", t.Downloaded)

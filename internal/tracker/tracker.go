@@ -26,8 +26,8 @@ func GET(torrent *torrent.Torrent) (int, []client.Client) {
 func createTrackerRequest(torrent *torrent.Torrent) *url.URL {
 	// Prepare query parameters for the tracker request
 	params := url.Values{}
-	params.Add("info_hash", string(torrent.InfoHash))
-	params.Add("peer_id", string(torrent.PeerID)) // This should ideally be dynamically generated or unique
+	params.Add("info_hash", string(torrent.InfoHash[:]))
+	params.Add("peer_id", string(torrent.PeerID[:])) // This should ideally be dynamically generated or unique
 	params.Add("port", fmt.Sprintf("%d", torrent.Port))
 	params.Add("uploaded", fmt.Sprintf("%d", torrent.Uploaded))
 	params.Add("downloaded", fmt.Sprintf("%d", torrent.Downloaded))
