@@ -114,11 +114,19 @@ func DownloadPiece(cl *client.Client, pieceIndex, pieceSize int, pieceHash [20]b
 }
 
 func read(cl *client.Client) ([]byte, error) {
+	if cl == nil {
+		panic("Client is nil")
+	}
+
 	utils.LogAndPrintln("Reading message from client")
 	msg, err := cl.Read()
 	if err != nil {
 		utils.LogAndPrintf("Error reading message: %v\n", err)
 		return nil, err
+	}
+
+	if msg == nil {
+		return nil, nil
 	}
 
 	switch msg.MessageID {

@@ -65,3 +65,22 @@ $ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sampl
 Downloaded sample.torrent to /Users/william/Documents/bittorrent/tmp/sample.txt.
 
 
+```sh
+$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt torrents/sample.torrent
+```
+
+```sh
+$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/codercat.gif torrents/codercat.gif.torrent
+```
+
+```sh
+$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/congratulations.gif torrents/congratulations.gif.torrent
+```
+
+```sh
+$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/debian.iso torrents/debian.torrent
+```
+
+```sh
+$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/itsworking.gif torrents/itsworking.gif.torrent
+```
