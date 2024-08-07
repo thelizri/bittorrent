@@ -2,7 +2,6 @@ package torrent
 
 import (
 	"fmt"
-	"karlan/torrent/internal/hash"
 	"karlan/torrent/internal/utils"
 	"log"
 )
@@ -32,7 +31,7 @@ func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
 
 	infoDictionaryStruct.Name = infoDict["name"].(string)
 	infoDictionaryStruct.PieceLength = infoDict["piece length"].(int)
-	infoDictionaryStruct.PieceHashes = hash.CastHashTo2dByteSlice(infoDict["pieces"])
+	infoDictionaryStruct.PieceHashes = splitPieceHashes(infoDict["pieces"])
 	infoDictionaryStruct.NumberOfPieces = len(infoDictionaryStruct.PieceHashes)
 
 	if length, ok := infoDict["length"].(int); ok {
@@ -74,6 +73,31 @@ func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
 	}
 
 	return infoDictionaryStruct
+}
+
+func splitPieceHashes(piece_hashes interface{}) [][20]byte {
+	hash, ok := piece_hashes.(string)
+	if !ok {
+		utils.LogAndPrintln("Not a string")
+		return nil
+	}
+
+	// Ensure that the hash length is a multiple of 20
+	if len(hash)%20 != 0 {
+		utils.LogAndPrintln("String length is not a multiple of 20")
+		return nil
+	}
+
+	length := len(hash) / 20
+	result := make([][20]byte, 0, length)
+
+	for i := 0; i < len(hash); i += 20 {
+		var temp [20]byte
+		copy(temp[:], hash[i:i+20])
+		result = append(result, temp)
+	}
+
+	return result
 }
 
 func (f *TorrentDictionary) GetPieceLength(index int) int {
@@ -133,27 +157,4 @@ func (f *TorrentDictionary) Log() {
 			log.Printf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
-}
-
-func (f *TorrentDictionary) VerifyIntegrityOfEachPiece() bool {
-	for i := 0; i < f.NumberOfPieces-1; i++ {
-		start := f.PieceLength * i
-		end := start + f.PieceLength
-		piece := f.Data[start:end]
-		err := hash.ValidatePieceHash(piece, f.PieceHashes[i])
-		if err != nil {
-			utils.LogAndPrintln(err.Error())
-			return false
-		}
-	}
-
-	start := f.PieceLength * (f.NumberOfPieces - 1)
-	piece := f.Data[start:]
-	err := hash.ValidatePieceHash(piece, f.PieceHashes[(f.NumberOfPieces-1)])
-	if err != nil {
-		utils.LogAndPrintln(err.Error())
-		return false
-	}
-
-	return true
 }

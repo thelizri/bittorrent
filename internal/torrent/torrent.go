@@ -132,7 +132,3 @@ func (t *Torrent) AddPiece(data []byte, index int) {
 func (t *Torrent) FinishedDownloading() bool {
 	return t.Downloaded == t.FileInfo.FileLength && t.Left == 0
 }
-
-func (t *Torrent) VerifyIntegrityOfEachPiece() bool {
-	return t.FileInfo.VerifyIntegrityOfEachPiece()
-}

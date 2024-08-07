@@ -129,11 +129,6 @@ func downloadFile(torrentPath, outputPath string) {
 		os.Exit(1)
 	}
 
-	if !t.VerifyIntegrityOfEachPiece() {
-		utils.LogSeparator()
-		utils.LogAndPrintln("Torrent finished downloading with corrupted pieces")
-		os.Exit(1)
-	}
 	fileio.WriteToAbsolutePath(outputPath, t.FileInfo.Data)
 	utils.LogAndPrintf("Writing torrent to file %s", outputPath)
 }

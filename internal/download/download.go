@@ -1,9 +1,10 @@
 package download
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"karlan/torrent/internal/client"
-	"karlan/torrent/internal/hash"
 	"karlan/torrent/internal/queue"
 	"karlan/torrent/internal/torrent"
 	"karlan/torrent/internal/utils"
@@ -17,6 +18,14 @@ type PieceProgress struct {
 	Size       int
 	Hash       [20]byte
 	Data       []byte
+}
+
+func (p *PieceProgress) validatePiece() error {
+	hash := sha1.Sum(p.Data)
+	if !bytes.Equal(hash[:], p.Hash[:]) {
+		return fmt.Errorf("Hashes are not matching:\n Expected: %x,\n Received: %x.\n", p.Hash, hash)
+	}
+	return nil
 }
 
 const BLOCK_SIZE int = 16 * 1024
@@ -103,7 +112,7 @@ func DownloadPiece(cl *client.Client, pieceIndex, pieceSize int, pieceHash [20]b
 	}
 
 	utils.LogAndPrintln("Validating piece hash")
-	err := hash.ValidatePieceHash(p.Data, p.Hash)
+	err := p.validatePiece()
 	if err != nil {
 		utils.LogAndPrintf("Piece hash validation failed: %v\n", err)
 		return zero, err
