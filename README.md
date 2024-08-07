@@ -48,39 +48,39 @@ $ ./your_bittorrent.sh peers sample.torrent
 
 
 ```sh
-$ ./your_bittorrent.sh handshake sample.torrent <peer_ip>:<peer_port>
+./your_bittorrent.sh handshake sample.torrent <peer_ip>:<peer_port>
 ```
 Peer ID: 0102030405060708090a0b0c0d0e0f1011121314
 
 
 ```sh
-$ ./your_bittorrent.sh download_piece -o /Users/william/Documents/bittorrent/tmp/test-piece-0 sample.torrent 0
+./your_bittorrent.sh download_piece -o /Users/william/Documents/bittorrent/tmp/test-piece-0 sample.torrent 0
 ```
 Piece 0 downloaded to /tmp/test-piece-0.
 
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt sample.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt sample.torrent
 ```
 Downloaded sample.torrent to /Users/william/Documents/bittorrent/tmp/sample.txt.
 
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt torrents/sample.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt torrents/sample.torrent
 ```
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/codercat.gif torrents/codercat.gif.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/codercat.gif torrents/codercat.gif.torrent
 ```
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/congratulations.gif torrents/congratulations.gif.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/congratulations.gif torrents/congratulations.gif.torrent
 ```
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/debian.iso torrents/debian.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/debian.iso torrents/debian.torrent
 ```
 
 ```sh
-$ ./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/itsworking.gif torrents/itsworking.gif.torrent
+./your_bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/itsworking.gif torrents/itsworking.gif.torrent
 ```

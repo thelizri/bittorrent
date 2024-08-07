@@ -103,7 +103,7 @@ func downloadFile(torrentPath, outputPath string) {
 	interval, clients := tracker.GET(t)
 	utils.LogAndPrintf("Interval: %v\n", interval)
 
-	q := queue.NewQueue(t.FileInfo.NumberOfPieces)
+	q := queue.NewQueue(t.GetNumberOfPieces())
 	var wg sync.WaitGroup
 	for i, c := range clients {
 		utils.LogAndPrintf("Index of clients: %d\n", i)
@@ -114,7 +114,7 @@ func downloadFile(torrentPath, outputPath string) {
 			continue
 		}
 
-		utils.LogAndPrintf("Downloading File %v from client %s\n", t.FileInfo.Name, c.Address())
+		utils.LogAndPrintf("Downloading File %v from client %s\n", t.GetName(), c.Address())
 		wg.Add(1)
 		go download.DownloadFile(&c, t, q, &wg)
 	}
@@ -129,6 +129,6 @@ func downloadFile(torrentPath, outputPath string) {
 		os.Exit(1)
 	}
 
-	fileio.WriteToAbsolutePath(outputPath, t.FileInfo.Data)
+	fileio.WriteToAbsolutePath(outputPath, t.GetData())
 	utils.LogAndPrintf("Writing torrent to file %s", outputPath)
 }

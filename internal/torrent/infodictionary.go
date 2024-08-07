@@ -3,13 +3,12 @@ package torrent
 import (
 	"fmt"
 	"karlan/torrent/internal/utils"
-	"log"
 )
 
 const MULTI = "Multi-File Torrent"
 const SINGLE = "Single-File Torrent"
 
-type TorrentDictionary struct {
+type torrentDictionary struct {
 	Data            []byte
 	Type            string
 	Name            string     // Name of the file (for single-file) or root directory (for multi-file)
@@ -18,16 +17,16 @@ type TorrentDictionary struct {
 	LastPieceLength int        // Length of last piece
 	NumberOfPieces  int        // Number of pieces
 	PieceHashes     [][20]byte // SHA1 hashes of each piece
-	Files           []File     // List of files for multitorrent
+	Files           []fileInfo // List of files for multitorrent
 }
 
-type File struct {
+type fileInfo struct {
 	Length int
 	Path   []string
 }
 
-func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
-	infoDictionaryStruct := &TorrentDictionary{}
+func createInfoDictionary(infoDict map[string]interface{}) *torrentDictionary {
+	infoDictionaryStruct := &torrentDictionary{}
 
 	infoDictionaryStruct.Name = infoDict["name"].(string)
 	infoDictionaryStruct.PieceLength = infoDict["piece length"].(int)
@@ -45,7 +44,7 @@ func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
 		infoDictionaryStruct.Type = MULTI
 		files := infoDict["files"].([]interface{})
 		totalLength := 0
-		var fileStructs []File
+		var fileStructs []fileInfo
 
 		for _, file := range files {
 			fileMap := file.(map[string]interface{})
@@ -57,7 +56,7 @@ func CreateInfoDictionary(infoDict map[string]interface{}) *TorrentDictionary {
 				path[i] = p.(string)
 			}
 
-			fileStruct := File{
+			fileStruct := fileInfo{
 				Length: length,
 				Path:   path,
 			}
@@ -100,7 +99,7 @@ func splitPieceHashes(piece_hashes interface{}) [][20]byte {
 	return result
 }
 
-func (f *TorrentDictionary) GetPieceLength(index int) int {
+func (f *torrentDictionary) GetPieceLength(index int) int {
 	if index == f.NumberOfPieces-1 {
 		return f.LastPieceLength
 	} else {
@@ -108,12 +107,12 @@ func (f *TorrentDictionary) GetPieceLength(index int) int {
 	}
 }
 
-func (f *TorrentDictionary) AddPiece(piece []byte, pieceIndex int) {
+func (f *torrentDictionary) addPiece(piece []byte, pieceIndex int) {
 	offset := f.PieceLength * pieceIndex
 	copy(f.Data[offset:offset+len(piece)], piece)
 }
 
-func (f *TorrentDictionary) Print() {
+func (f *torrentDictionary) print() {
 	utils.LogAndPrintf("\tFile Details:\n")
 	utils.LogAndPrintf("\tName: %s\n", f.Name)
 	utils.LogAndPrintf("\tType: %s\n", f.Type)
@@ -132,29 +131,6 @@ func (f *TorrentDictionary) Print() {
 		utils.LogAndPrintf("\tFiles:\n")
 		for _, file := range f.Files {
 			utils.LogAndPrintf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
-		}
-	}
-}
-
-func (f *TorrentDictionary) Log() {
-	log.Printf("\tFile Details:\n")
-	log.Printf("\tName: %s\n", f.Name)
-	log.Printf("\tType: %s\n", f.Type)
-	log.Printf("\tFile Length: %d bytes\n", f.FileLength)
-	log.Printf("\tPiece Length: %d bytes\n", f.PieceLength)
-	log.Printf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
-	log.Printf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
-	if f.NumberOfPieces < 10 {
-		log.Printf("\tPiece Hashes:\n")
-		for i, hash := range f.PieceHashes {
-			log.Printf("\t\tPiece %d: %x\n", i, hash)
-		}
-	}
-
-	if f.Type == MULTI {
-		log.Printf("\tFiles:\n")
-		for _, file := range f.Files {
-			log.Printf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
 }

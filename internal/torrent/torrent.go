@@ -13,9 +13,9 @@ import (
 
 // Torrent holds the decoded information from a .torrent file.
 type Torrent struct {
-	Announce string   // URL of the torrent tracker
-	InfoHash [20]byte // SHA1 hash of the 'info' section of the torrent file
-	FileInfo TorrentDictionary
+	Announce       string   // URL of the torrent tracker
+	InfoHash       [20]byte // SHA1 hash of the 'info' section of the torrent file
+	infoDictionary torrentDictionary
 
 	Comment string // Comments about the torrent
 	Creator string // Software used to create the torrent
@@ -65,12 +65,12 @@ func createTorrentStruct(dict map[string]interface{}) *Torrent {
 		torrent.Date = date
 	}
 
-	torrent.FileInfo = *CreateInfoDictionary(infoDict)
+	torrent.infoDictionary = *createInfoDictionary(infoDict)
 
 	torrent.generatePeerID()
 	torrent.Port = 6881
 
-	torrent.Left = torrent.FileInfo.FileLength
+	torrent.Left = torrent.infoDictionary.FileLength
 
 	return torrent
 }
@@ -104,7 +104,7 @@ func (t *Torrent) Print() {
 	if t.Date != 0 {
 		utils.LogAndPrintf("Creation Date: %d\n", t.Date)
 	}
-	t.FileInfo.Print()
+	t.infoDictionary.print()
 	utils.LogAndPrintf("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
 	utils.LogAndPrintf("Port: %d\n", t.Port)
 	utils.LogAndPrintf("Uploaded: %d bytes\n", t.Uploaded)
@@ -114,21 +114,33 @@ func (t *Torrent) Print() {
 }
 
 func (t *Torrent) GetPieceLength(index int) int {
-	return t.FileInfo.GetPieceLength(index)
+	return t.infoDictionary.GetPieceLength(index)
 }
 
 func (t *Torrent) GetPieceHash(index int) [20]byte {
-	return t.FileInfo.PieceHashes[index]
+	return t.infoDictionary.PieceHashes[index]
 }
 
 func (t *Torrent) AddPiece(data []byte, index int) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	t.FileInfo.AddPiece(data, index)
+	t.infoDictionary.addPiece(data, index)
 	t.Downloaded += len(data)
 	t.Left -= len(data)
 }
 
 func (t *Torrent) FinishedDownloading() bool {
-	return t.Downloaded == t.FileInfo.FileLength && t.Left == 0
+	return t.Downloaded == t.infoDictionary.FileLength && t.Left == 0
+}
+
+func (t *Torrent) GetNumberOfPieces() int {
+	return t.infoDictionary.NumberOfPieces
+}
+
+func (t *Torrent) GetName() string {
+	return t.infoDictionary.Name
+}
+
+func (t *Torrent) GetData() []byte {
+	return t.infoDictionary.Data
 }
