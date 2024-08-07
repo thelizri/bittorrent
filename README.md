@@ -3,31 +3,31 @@
 ### Decode Commands
 
 ```sh
-$ ./your_bittorrent.sh decode 5:hello
+./your_bittorrent.sh decode 5:hello
 ```
 "hello"
 
 
 ```sh
-$ ./your_bittorrent.sh decode i52e
+./your_bittorrent.sh decode i52e
 ```
 52
 
 
 ```sh
-$ ./your_bittorrent.sh decode l5:helloi52ee
+./your_bittorrent.sh decode l5:helloi52ee
 ```
 ["hello",52]
 
 
 ```sh
-$ ./your_bittorrent.sh decode d3:foo3:bar5:helloi52ee
+./your_bittorrent.sh decode d3:foo3:bar5:helloi52ee
 ```
 {"foo":"bar","hello":52}
 
 
 ```sh
-$ ./your_bittorrent.sh info sample.torrent
+./your_bittorrent.sh info sample.torrent
 ```
 Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce
 Length: 92063
@@ -40,7 +40,7 @@ f00d937a0213df1982bc8d097227ad9e909acc17
 
 
 ```sh
-$ ./your_bittorrent.sh peers sample.torrent
+./your_bittorrent.sh peers sample.torrent
 ```
 178.62.82.89:51470
 165.232.33.77:51467
