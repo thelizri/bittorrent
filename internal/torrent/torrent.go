@@ -6,9 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"karlan/torrent/internal/bencode"
-	"karlan/torrent/internal/utils"
 	"os"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Torrent holds the decoded information from a .torrent file.
@@ -35,12 +36,12 @@ type Torrent struct {
 func Open(filePath string) *Torrent {
 	bytes, err := os.ReadFile(filePath)
 	if err != nil {
-		utils.LogPrintExit(fmt.Sprintf("Error reading file: %v\n", err))
+		log.Fatal(fmt.Sprintf("Error reading file: %v\n", err))
 	}
 
 	decoding, _, err := bencode.Decode(string(bytes), 0)
 	if err != nil {
-		utils.LogPrintExit(fmt.Sprintf("Error decoding file: %v\n", err))
+		log.Fatal(fmt.Sprintf("Error decoding file: %v\n", err))
 	}
 
 	dict := decoding.(map[string]interface{})
@@ -85,32 +86,30 @@ func (t *Torrent) generatePeerID() {
 	peerID := make([]byte, 20)
 	_, err := rand.Read(peerID)
 	if err != nil {
-		utils.LogAndPrintf("Generate peer id: %s", err)
+		log.Error("Generate peer id: %s", err)
 	}
 	t.PeerID = [20]byte(peerID)
 }
 
-func (t *Torrent) Print() {
-	utils.LogSeparator()
-	utils.LogAndPrintf("Torrent Details:\n")
-	utils.LogAndPrintf("Tracker URL: %s\n", t.Announce)
-	utils.LogAndPrintf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
+func (t *Torrent) Log() {
+	log.Info("Torrent Details:\n")
+	log.Info("Tracker URL: %s\n", t.Announce)
+	log.Info("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
 	if t.Comment != "" {
-		utils.LogAndPrintf("Comment: %s\n", t.Comment)
+		log.Info("Comment: %s\n", t.Comment)
 	}
 	if t.Creator != "" {
-		utils.LogAndPrintf("Creator: %s\n", t.Creator)
+		log.Info("Creator: %s\n", t.Creator)
 	}
 	if t.Date != 0 {
-		utils.LogAndPrintf("Creation Date: %d\n", t.Date)
+		log.Info("Creation Date: %d\n", t.Date)
 	}
 	t.infoDictionary.print()
-	utils.LogAndPrintf("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
-	utils.LogAndPrintf("Port: %d\n", t.Port)
-	utils.LogAndPrintf("Uploaded: %d bytes\n", t.Uploaded)
-	utils.LogAndPrintf("Downloaded: %d bytes\n", t.Downloaded)
-	utils.LogAndPrintf("Left: %d bytes\n", t.Left)
-	utils.LogSeparator()
+	log.Info("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
+	log.Info("Port: %d\n", t.Port)
+	log.Info("Uploaded: %d bytes\n", t.Uploaded)
+	log.Info("Downloaded: %d bytes\n", t.Downloaded)
+	log.Info("Left: %d bytes\n", t.Left)
 }
 
 func (t *Torrent) GetPieceLength(index int) int {

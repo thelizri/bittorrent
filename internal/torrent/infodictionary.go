@@ -2,7 +2,8 @@ package torrent
 
 import (
 	"fmt"
-	"karlan/torrent/internal/utils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const MULTI = "Multi-File Torrent"
@@ -77,13 +78,13 @@ func createInfoDictionary(infoDict map[string]interface{}) *torrentDictionary {
 func splitPieceHashes(piece_hashes interface{}) [][20]byte {
 	hash, ok := piece_hashes.(string)
 	if !ok {
-		utils.LogAndPrintln("Not a string")
+		log.Info("Not a string")
 		return nil
 	}
 
 	// Ensure that the hash length is a multiple of 20
 	if len(hash)%20 != 0 {
-		utils.LogAndPrintln("String length is not a multiple of 20")
+		log.Info("String length is not a multiple of 20")
 		return nil
 	}
 
@@ -113,24 +114,24 @@ func (f *torrentDictionary) addPiece(piece []byte, pieceIndex int) {
 }
 
 func (f *torrentDictionary) print() {
-	utils.LogAndPrintf("\tFile Details:\n")
-	utils.LogAndPrintf("\tName: %s\n", f.Name)
-	utils.LogAndPrintf("\tType: %s\n", f.Type)
-	utils.LogAndPrintf("\tFile Length: %d bytes\n", f.FileLength)
-	utils.LogAndPrintf("\tPiece Length: %d bytes\n", f.PieceLength)
-	utils.LogAndPrintf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
-	utils.LogAndPrintf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
+	log.Info("\tFile Details:\n")
+	log.Info("\tName: %s\n", f.Name)
+	log.Info("\tType: %s\n", f.Type)
+	log.Info("\tFile Length: %d bytes\n", f.FileLength)
+	log.Info("\tPiece Length: %d bytes\n", f.PieceLength)
+	log.Info("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
+	log.Info("\tNumber of Pieces: %d\n", f.NumberOfPieces)
 	if f.NumberOfPieces < 10 {
-		utils.LogAndPrintf("\tPiece Hashes:\n")
+		log.Info("\tPiece Hashes:\n")
 		for i, hash := range f.PieceHashes {
-			utils.LogAndPrintf("\t\tPiece %d: %x\n", i, hash)
+			log.Info("\t\tPiece %d: %x\n", i, hash)
 		}
 	}
 
 	if f.Type == MULTI {
-		utils.LogAndPrintf("\tFiles:\n")
+		log.Info("\tFiles:\n")
 		for _, file := range f.Files {
-			utils.LogAndPrintf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
+			log.Info("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
 }

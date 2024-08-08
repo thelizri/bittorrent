@@ -1,9 +1,10 @@
 package fileio
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func WriteToRelativePath(filePath string, data []byte) {

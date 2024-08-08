@@ -5,15 +5,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 
+	log "github.com/sirupsen/logrus"
+
 	"karlan/torrent/internal/bencode"
 	"karlan/torrent/internal/client"
 	"karlan/torrent/internal/torrent"
-	"karlan/torrent/internal/utils"
 )
 
 func GET(torrent *torrent.Torrent) (int, []client.Client) {
@@ -37,7 +37,7 @@ func createTrackerRequest(torrent *torrent.Torrent) *url.URL {
 	// Build URL with query parameters
 	baseURL, err := url.Parse(torrent.Announce)
 	if err != nil {
-		utils.LogAndPrintf("Error parsing announce URL: %s", err)
+		log.Info("Error parsing announce URL: %s", err)
 		return nil
 	}
 	baseURL.RawQuery = params.Encode()
@@ -49,14 +49,14 @@ func sendTrackerRequest(baseURL *url.URL) []byte {
 	// Make GET request
 	resp, err := http.Get(baseURL.String())
 	if err != nil {
-		utils.LogAndPrintf("Error making GET request: %s", err)
+		log.Info("Error making GET request: %s", err)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		utils.LogAndPrintf("Error reading response body: %s", err)
+		log.Info("Error reading response body: %s", err)
 		return nil
 	}
 	return body

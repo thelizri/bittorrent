@@ -7,8 +7,9 @@ import (
 	"karlan/torrent/internal/client"
 	"karlan/torrent/internal/queue"
 	"karlan/torrent/internal/torrent"
-	"karlan/torrent/internal/utils"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type PieceProgress struct {
@@ -45,7 +46,7 @@ func DownloadFile(cl *client.Client, t *torrent.Torrent, q *queue.Queue, wg *syn
 	for !q.IsEmpty() {
 		pieceIndex, err := q.Dequeue()
 		if err != nil {
-			utils.LogAndPrintf("Download File: %s", err)
+			log.Info("Download File: %s", err)
 			q.Enqueue(pieceIndex)
 			return
 		}
@@ -57,7 +58,7 @@ func DownloadFile(cl *client.Client, t *torrent.Torrent, q *queue.Queue, wg *syn
 
 		pieceProgress, err := DownloadPiece(cl, pieceIndex, t.GetPieceLength(pieceIndex), t.GetPieceHash(pieceIndex))
 		if err != nil {
-			utils.LogAndPrintf("Download File: %s", err)
+			log.Info("Download File: %s", err)
 			q.Enqueue(pieceIndex)
 			return
 		}
@@ -67,7 +68,7 @@ func DownloadFile(cl *client.Client, t *torrent.Torrent, q *queue.Queue, wg *syn
 }
 
 func DownloadPiece(cl *client.Client, pieceIndex, pieceSize int, pieceHash [20]byte) (PieceProgress, error) {
-	utils.LogAndPrintf("Starting download of piece: Index=%d, Size=%d\n", pieceIndex, pieceSize)
+	log.Info("Starting download of piece: Index=%d, Size=%d\n", pieceIndex, pieceSize)
 	var zero PieceProgress
 	p := PieceProgress{
 		Index: pieceIndex,
@@ -76,49 +77,49 @@ func DownloadPiece(cl *client.Client, pieceIndex, pieceSize int, pieceHash [20]b
 		Data:  make([]byte, pieceSize),
 	}
 
-	utils.LogAndPrintln("Sending interested message")
+	log.Info("Sending interested message")
 	cl.SendInterested()
 
 	var offset, end int
 	for p.Downloaded < p.Size {
-		utils.LogAndPrintf("Download progress: %d/%d bytes\n", p.Downloaded, p.Size)
+		log.Info("Download progress: %d/%d bytes\n", p.Downloaded, p.Size)
 		if !cl.Choked {
 			blockSize := BLOCK_SIZE
 			if blockSize > p.Size-p.Downloaded {
 				blockSize = p.Size - p.Downloaded
 			}
 			offset = p.Downloaded
-			utils.LogAndPrintf("Requesting block: Offset=%d, BlockSize=%d\n", offset, blockSize)
+			log.Info("Requesting block: Offset=%d, BlockSize=%d\n", offset, blockSize)
 			cl.SendRequest(p.Index, offset, blockSize)
 		} else {
-			utils.LogAndPrintln("Client is choked, waiting for unchoke message")
+			log.Info("Client is choked, waiting for unchoke message")
 		}
 
 		data, err := read(cl)
 		if err != nil {
-			utils.LogAndPrintf("Error reading data: %v\n", err)
+			log.Info("Error reading data: %v\n", err)
 			return zero, err
 		}
 
 		if data == nil {
-			utils.LogAndPrintln("No data received, continuing")
+			log.Info("No data received, continuing")
 			continue
 		}
 
 		end = offset + len(data)
-		utils.LogAndPrintf("Copying block to data: Offset=%d, End=%d, BlockSize=%d\n", offset, end, len(data))
+		log.Info("Copying block to data: Offset=%d, End=%d, BlockSize=%d\n", offset, end, len(data))
 		copy(p.Data[offset:end], data)
 		p.Downloaded += len(data)
 	}
 
-	utils.LogAndPrintln("Validating piece hash")
+	log.Info("Validating piece hash")
 	err := p.validatePiece()
 	if err != nil {
-		utils.LogAndPrintf("Piece hash validation failed: %v\n", err)
+		log.Info("Piece hash validation failed: %v\n", err)
 		return zero, err
 	}
 
-	utils.LogAndPrintln("Hashes match, piece download complete")
+	log.Info("Hashes match, piece download complete")
 	return p, nil
 }
 
@@ -127,10 +128,10 @@ func read(cl *client.Client) ([]byte, error) {
 		panic("Client is nil")
 	}
 
-	utils.LogAndPrintln("Reading message from client")
+	log.Info("Reading message from client")
 	msg, err := cl.Read()
 	if err != nil {
-		utils.LogAndPrintf("Error reading message: %v\n", err)
+		log.Info("Error reading message: %v\n", err)
 		return nil, err
 	}
 
@@ -140,43 +141,43 @@ func read(cl *client.Client) ([]byte, error) {
 
 	switch msg.MessageID {
 	case client.MSG_CHOKE:
-		utils.LogAndPrintln("Received Choke message")
+		log.Info("Received Choke message")
 		cl.Choked = true
 
 	case client.MSG_UNCHOKE:
-		utils.LogAndPrintln("Received Unchoke message")
+		log.Info("Received Unchoke message")
 		cl.Choked = false
 
 	case client.MSG_INTERESTED:
-		utils.LogAndPrintln("Received Interested message")
+		log.Info("Received Interested message")
 		// Handle interested message
 
 	case client.MSG_NOT_INTERESTED:
-		utils.LogAndPrintln("Received Not Interested message")
+		log.Info("Received Not Interested message")
 		// Handle not interested message
 
 	case client.MSG_HAVE:
-		utils.LogAndPrintln("Received Have message")
+		log.Info("Received Have message")
 		cl.AddPiece(msg)
 
 	case client.MSG_BITFIELD:
-		utils.LogAndPrintln("Received Bitfield message")
+		log.Info("Received Bitfield message")
 		// Handle bitfield message if necessary
 
 	case client.MSG_REQUEST:
-		utils.LogAndPrintln("Received Request message")
+		log.Info("Received Request message")
 		// Handle request message if necessary
 
 	case client.MSG_PIECE:
-		utils.LogAndPrintln("Received Piece message")
+		log.Info("Received Piece message")
 		return msg.Payload[8:], nil
 
 	case client.MSG_CANCEL:
-		utils.LogAndPrintln("Received Cancel message")
+		log.Info("Received Cancel message")
 		// Handle cancel message if necessary
 
 	default:
-		utils.LogAndPrintf("Received unknown message ID: %d\n", msg.MessageID)
+		log.Info("Received unknown message ID: %d\n", msg.MessageID)
 		return nil, fmt.Errorf("received unknown message\n")
 	}
 
