@@ -3,6 +3,8 @@ package bencode
 import (
 	"fmt"
 	"sort"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func encodeString(value string) string {
@@ -50,6 +52,8 @@ func Encode(value interface{}) string {
 	case map[string]interface{}:
 		return encodeDict(v)
 	default:
-		panic(fmt.Errorf("error encoding value"))
+		log.Fatal("error encoding value")
 	}
+
+	return ""
 }

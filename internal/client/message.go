@@ -2,7 +2,8 @@ package client
 
 import (
 	"encoding/binary"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Constants representing different message IDs used in the BitTorrent protocol.

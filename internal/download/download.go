@@ -114,6 +114,7 @@ func DownloadPiece(cl *client.Client, pieceIndex, pieceSize int, pieceHash [20]b
 	}
 
 	log.Info("Hashes match, piece download complete")
+	fmt.Printf("Downloaded piece %d\n", p.Index)
 	return p, nil
 }
 
