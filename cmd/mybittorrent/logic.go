@@ -24,8 +24,7 @@ func decodeBencodedString(encoding string) {
 		log.Fatalf("Error decoding bencode: %v", err)
 	}
 	jsonOutput, _ := json.Marshal(decoded)
-	log.Debugf("Decoded JSON: %s", string(jsonOutput))
-	fmt.Println("Decoded bencode string to JSON format.")
+	fmt.Printf("Decoded JSON: %s", string(jsonOutput))
 }
 
 func printTorrentInfo(filePath string) {
@@ -33,7 +32,7 @@ func printTorrentInfo(filePath string) {
 	torrent := torrent.Open(filePath)
 	log.Infof("Printing torrent info")
 	torrent.Print()
-	fmt.Printf("Torrent info for %s has been printed.\n", filePath)
+	log.Infof("Torrent info for %s has been printed.\n", filePath)
 }
 
 func printPeers(filePath string) {
@@ -54,14 +53,12 @@ func performHandshakeWithPeer(address, filePath string) {
 	log.Debugf("Converting address to client: %s", address)
 	client, err := client.StringToClient(address)
 	if err != nil {
-		log.Errorf("Error parsing address: %v", err)
-		log.Fatal(fmt.Sprintf("Error parsing address: %v", err))
+		log.Fatalf("Error parsing address: %v", err)
 	}
 	log.Infof("Initiating handshake with peer")
 	err = client.Init(torrent.InfoHash, torrent.PeerID)
 	if err != nil {
-		log.Errorf("Error connecting with client: %v", err)
-		log.Fatal(fmt.Sprintf("Error connecting with client: %v", err))
+		log.Fatalf("Error connecting with client: %v", err)
 	}
 	fmt.Printf("Handshake successful with peer at address %s. Peer ID: %s\n", address, hex.EncodeToString(client.PeerID[:]))
 }
