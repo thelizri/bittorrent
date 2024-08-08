@@ -46,7 +46,7 @@ func setupLogging() *os.File {
 
 func decodeCommand() {
 	if len(os.Args) < 3 {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh decode <bencoded_string>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh decode <bencoded_string>")
 		os.Exit(1)
 	}
 	decodeBencodedString(os.Args[2])
@@ -54,7 +54,7 @@ func decodeCommand() {
 
 func infoCommand() {
 	if len(os.Args) < 3 {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh info <file_path>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh info <file_path>")
 		os.Exit(1)
 	}
 	printTorrentInfo(os.Args[2])
@@ -62,7 +62,7 @@ func infoCommand() {
 
 func peersCommand() {
 	if len(os.Args) < 3 {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh peers <file_path>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh peers <file_path>")
 		os.Exit(1)
 	}
 	printPeers(os.Args[2])
@@ -70,7 +70,7 @@ func peersCommand() {
 
 func handshakeCommand() {
 	if len(os.Args) < 4 {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh handshake <file_path> <ip>:<port>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh handshake <file_path> <ip>:<port>")
 		os.Exit(1)
 	}
 	performHandshakeWithPeer(os.Args[3], os.Args[2])
@@ -78,13 +78,13 @@ func handshakeCommand() {
 
 func downloadPieceCommand() {
 	if len(os.Args) < 6 || os.Args[2] != "-o" {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh download_piece -o <output_path> <torrent_path> <piece_index>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh download_piece -o <output_path> <torrent_path> <piece_index>")
 		os.Exit(1)
 	}
 	pieceIndex, err := strconv.Atoi(os.Args[5])
 	if err != nil {
 		utils.LogAndPrintln("Invalid piece index")
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh download_piece -o <output_path> <torrent_path> <piece_index>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh download_piece -o <output_path> <torrent_path> <piece_index>")
 		os.Exit(1)
 	}
 	downloadPiece(os.Args[4], os.Args[3], pieceIndex)
@@ -92,7 +92,7 @@ func downloadPieceCommand() {
 
 func downloadFileCommand() {
 	if len(os.Args) < 5 || os.Args[2] != "-o" {
-		utils.LogAndPrintln("Usage: ./your_bittorrent.sh download -o <output_path> <torrent_path>")
+		utils.LogAndPrintln("Usage: ./bittorrent.sh download -o <output_path> <torrent_path>")
 		os.Exit(1)
 	}
 	downloadFile(os.Args[4], os.Args[3])

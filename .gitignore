@@ -1,4 +1,4 @@
-testing/
 *.DS_Store
-tmp/
 *.log
+
+tmp/
