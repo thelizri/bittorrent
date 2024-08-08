@@ -24,7 +24,7 @@ func decodeBencodedString(encoding string) {
 		log.Fatalf("Error decoding bencode: %v", err)
 	}
 	jsonOutput, _ := json.Marshal(decoded)
-	fmt.Printf("Decoded JSON: %s", string(jsonOutput))
+	fmt.Printf("Decoded JSON: %s\n", string(jsonOutput))
 }
 
 func printTorrentInfo(filePath string) {

@@ -67,7 +67,7 @@ Get information about a torrent file using the `info` command:
 **Example:**
 
 ```sh
-./bittorrent.sh info sample.torrent
+./bittorrent.sh info torrents/sample.torrent
 ```
 Output:
 ```
@@ -92,7 +92,7 @@ List peers available for a torrent using the `peers` command:
 **Example:**
 
 ```sh
-./bittorrent.sh peers sample.torrent
+./bittorrent.sh peers torrents/sample.torrent
 ```
 Output:
 ```
@@ -112,7 +112,7 @@ Initiate a handshake with a peer using the `handshake` command:
 **Example:**
 
 ```sh
-./bittorrent.sh handshake sample.torrent 178.62.82.89:51470
+./bittorrent.sh handshake torrents/sample.torrent 178.62.82.89:51470
 ```
 Output:
 ```
@@ -130,7 +130,7 @@ Download a specific piece of the file using the `download_piece` command:
 **Example:**
 
 ```sh
-./bittorrent.sh download_piece -o /Users/william/Documents/bittorrent/tmp/test-piece-0 sample.torrent 0
+./bittorrent.sh download_piece -o /Users/william/Documents/bittorrent/tmp/test-piece-0 torrents/sample.torrent 0
 ```
 Output:
 ```
@@ -146,10 +146,6 @@ Download the entire file using the `download` command:
 ```
 
 **Examples:**
-
-```sh
-./bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt sample.torrent
-```
 
 ```sh
 ./bittorrent.sh download -o /Users/william/Documents/bittorrent/tmp/sample.txt torrents/sample.torrent
