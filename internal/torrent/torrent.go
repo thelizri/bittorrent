@@ -86,30 +86,30 @@ func (t *Torrent) generatePeerID() {
 	peerID := make([]byte, 20)
 	_, err := rand.Read(peerID)
 	if err != nil {
-		log.Error("Generate peer id: %s", err)
+		log.Errorf("Generate peer id: %s", err)
 	}
 	t.PeerID = [20]byte(peerID)
 }
 
 func (t *Torrent) Log() {
-	log.Info("Torrent Details:\n")
-	log.Info("Tracker URL: %s\n", t.Announce)
-	log.Info("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
+	log.Infof("Torrent Details:\n")
+	log.Infof("Tracker URL: %s\n", t.Announce)
+	log.Infof("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
 	if t.Comment != "" {
-		log.Info("Comment: %s\n", t.Comment)
+		log.Infof("Comment: %s\n", t.Comment)
 	}
 	if t.Creator != "" {
-		log.Info("Creator: %s\n", t.Creator)
+		log.Infof("Creator: %s\n", t.Creator)
 	}
 	if t.Date != 0 {
-		log.Info("Creation Date: %d\n", t.Date)
+		log.Infof("Creation Date: %d\n", t.Date)
 	}
-	t.infoDictionary.print()
-	log.Info("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
-	log.Info("Port: %d\n", t.Port)
-	log.Info("Uploaded: %d bytes\n", t.Uploaded)
-	log.Info("Downloaded: %d bytes\n", t.Downloaded)
-	log.Info("Left: %d bytes\n", t.Left)
+	t.infoDictionary.log()
+	log.Infof("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
+	log.Infof("Port: %d\n", t.Port)
+	log.Infof("Uploaded: %d bytes\n", t.Uploaded)
+	log.Infof("Downloaded: %d bytes\n", t.Downloaded)
+	log.Infof("Left: %d bytes\n", t.Left)
 }
 
 func (t *Torrent) GetPieceLength(index int) int {

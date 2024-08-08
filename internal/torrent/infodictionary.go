@@ -113,25 +113,25 @@ func (f *torrentDictionary) addPiece(piece []byte, pieceIndex int) {
 	copy(f.Data[offset:offset+len(piece)], piece)
 }
 
-func (f *torrentDictionary) print() {
-	log.Info("\tFile Details:\n")
-	log.Info("\tName: %s\n", f.Name)
-	log.Info("\tType: %s\n", f.Type)
-	log.Info("\tFile Length: %d bytes\n", f.FileLength)
-	log.Info("\tPiece Length: %d bytes\n", f.PieceLength)
-	log.Info("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
-	log.Info("\tNumber of Pieces: %d\n", f.NumberOfPieces)
+func (f *torrentDictionary) log() {
+	log.Infof("\tFile Details:\n")
+	log.Infof("\tName: %s\n", f.Name)
+	log.Infof("\tType: %s\n", f.Type)
+	log.Infof("\tFile Length: %d bytes\n", f.FileLength)
+	log.Infof("\tPiece Length: %d bytes\n", f.PieceLength)
+	log.Infof("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
+	log.Infof("\tNumber of Pieces: %d\n", f.NumberOfPieces)
 	if f.NumberOfPieces < 10 {
 		log.Info("\tPiece Hashes:\n")
 		for i, hash := range f.PieceHashes {
-			log.Info("\t\tPiece %d: %x\n", i, hash)
+			log.Infof("\t\tPiece %d: %x\n", i, hash)
 		}
 	}
 
 	if f.Type == MULTI {
 		log.Info("\tFiles:\n")
 		for _, file := range f.Files {
-			log.Info("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
+			log.Infof("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
 		}
 	}
 }

@@ -11,9 +11,6 @@ import (
 var logFile *os.File
 
 func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
-
 	// Open a file for logging
 	var err error
 	logFile, err = os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -25,7 +22,7 @@ func init() {
 	log.SetOutput(logFile)
 
 	// Only log the warning severity or above.
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.TraceLevel)
 }
 
 func main() {
@@ -49,7 +46,7 @@ func main() {
 	if cmdFunc, exists := commands[command]; exists {
 		cmdFunc()
 	} else {
-		log.Info("Unknown command: %v\n", command)
+		log.Infof("Unknown command: %v\n", command)
 		os.Exit(1)
 	}
 }

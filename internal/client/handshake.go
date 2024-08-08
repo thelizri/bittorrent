@@ -29,7 +29,7 @@ type Handshake struct {
 }
 
 func (h *Handshake) log() {
-	log.Info(h.string())
+	log.Debug(h.string())
 }
 
 // String returns a formatted string of the Handshake struct
@@ -45,7 +45,7 @@ func (h *Handshake) string() string {
 
 // newHandshake creates a new handshake message
 func newHandshake(infoHash, peerID [20]byte) *Handshake {
-	log.Info("Creating new handshake: InfoHash=%s, PeerID=%s\n", hex.EncodeToString(infoHash[:]), hex.EncodeToString(peerID[:]))
+	log.Debugf("Creating new handshake: InfoHash=%s, PeerID=%s", hex.EncodeToString(infoHash[:]), hex.EncodeToString(peerID[:]))
 	hs := &Handshake{
 		Length:   protocolLength,
 		Protocol: protocolString,
@@ -58,7 +58,7 @@ func newHandshake(infoHash, peerID [20]byte) *Handshake {
 // serialize converts the handshake into a byte slice
 // <length:1><protocol id:19><reserved bytes:8><info hash:20><peer id:20>
 func (h *Handshake) serialize() []byte {
-	log.Info("Serializing handshake")
+	log.Debug("Serializing handshake")
 	buf := make([]byte, handshakeLength)
 	buf[0] = h.Length
 	curr := 1
@@ -66,26 +66,26 @@ func (h *Handshake) serialize() []byte {
 	curr += copy(buf[curr:], h.Reserved[:])
 	curr += copy(buf[curr:], h.InfoHash[:])
 	curr += copy(buf[curr:], h.PeerID[:])
-	log.Info("Serialized handshake: %x\n", buf)
+	log.Tracef("Serialized handshake: %x", buf)
 	return buf
 }
 
 // parseHandshake parses a handshake message from a byte slice
 func parseHandshake(buf []byte) (*Handshake, error) {
-	log.Info("Parsing handshake: %x\n", buf)
+	log.Debugf("Parsing handshake: %x", buf)
 	if len(buf) < handshakeLength {
 		return nil, fmt.Errorf("invalid handshake length: %d", len(buf))
 	}
 
 	h := &Handshake{}
 	h.Length = buf[0]
-	log.Info("Parsed Length: %d\n", h.Length)
+	log.Debugf("Parsed Length: %d", h.Length)
 	if int(h.Length) != len(protocolString) {
 		return nil, fmt.Errorf("invalid protocol string length")
 	}
 
 	h.Protocol = string(buf[1 : 1+int(h.Length)])
-	log.Info("Parsed Protocol: %s\n", h.Protocol)
+	log.Debugf("Parsed Protocol: %s", h.Protocol)
 	if h.Protocol != protocolString {
 		return nil, fmt.Errorf("invalid protocol string: %s", h.Protocol)
 	}
@@ -94,17 +94,17 @@ func parseHandshake(buf []byte) (*Handshake, error) {
 	copy(h.InfoHash[:], buf[1+int(h.Length)+reservedBytes:21+int(h.Length)+reservedBytes])
 	copy(h.PeerID[:], buf[21+int(h.Length)+reservedBytes:handshakeLength])
 
-	log.Info("Parsed Handshake: %s\n", h.string())
+	log.Debugf("Parsed Handshake: %s", h.string())
 	return h, nil
 }
 
 func sendHandshake(address string, handshake *Handshake) (*Handshake, net.Conn, error) {
-	log.Info("Sending handshake to address: %s\n", address)
+	log.Infof("Sending handshake to address: %s", address)
 
 	// Step 1: Establish a TCP connection to the peer
 	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
 	if err != nil {
-		log.Info("Error establishing TCP connection: %s", err)
+		log.Errorf("Error establishing TCP connection: %v", err)
 		return nil, nil, err
 	}
 	log.Info("TCP connection established with peer")
@@ -114,7 +114,7 @@ func sendHandshake(address string, handshake *Handshake) (*Handshake, net.Conn, 
 	defer conn.SetDeadline(time.Time{})
 	_, err = conn.Write(handshake.serialize())
 	if err != nil {
-		log.Info("Error sending handshake: %s", err)
+		log.Errorf("Error sending handshake: %v", err)
 		conn.Close()
 		return nil, nil, err
 	}
@@ -124,17 +124,17 @@ func sendHandshake(address string, handshake *Handshake) (*Handshake, net.Conn, 
 	responseBuf := make([]byte, handshakeLength)
 	_, err = io.ReadFull(conn, responseBuf)
 	if err != nil {
-		log.Info("Error receiving handshake: %s", err)
+		log.Errorf("Error receiving handshake: %v", err)
 		conn.Close()
 		return nil, nil, err
 	}
-	log.Info("Received handshake response: %x\n", responseBuf)
+	log.Info("Received handshake response")
 
 	// Step 4: Parse handshake
 	response, err := parseHandshake(responseBuf)
 	if err != nil {
 		conn.Close()
-		log.Info("Error parsing handshake")
+		log.Error("Error parsing handshake")
 		return nil, nil, err
 	}
 	log.Info("Handshake parsed successfully")

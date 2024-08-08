@@ -37,11 +37,12 @@ func createTrackerRequest(torrent *torrent.Torrent) *url.URL {
 	// Build URL with query parameters
 	baseURL, err := url.Parse(torrent.Announce)
 	if err != nil {
-		log.Info("Error parsing announce URL: %s", err)
+		log.Errorf("Error parsing announce URL: %v", err)
 		return nil
 	}
 	baseURL.RawQuery = params.Encode()
 
+	log.Debugf("Created tracker request URL: %s", baseURL.String())
 	return baseURL
 }
 
@@ -49,16 +50,18 @@ func sendTrackerRequest(baseURL *url.URL) []byte {
 	// Make GET request
 	resp, err := http.Get(baseURL.String())
 	if err != nil {
-		log.Info("Error making GET request: %s", err)
+		log.Errorf("Error making GET request: %v", err)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Info("Error reading response body: %s", err)
+		log.Errorf("Error reading response body: %v", err)
 		return nil
 	}
+
+	log.Debugf("Received tracker response: %x", body)
 	return body
 }
 
@@ -66,59 +69,47 @@ func parseResponse(body []byte) (int, []client.Client) {
 	// Decoding Body
 	encoding, _, err := bencode.Decode(string(body), 0)
 	if err != nil {
-		log.Println("Error decoding body:", err)
+		log.Errorf("Error decoding body: %v", err)
 		return 0, nil
 	}
 
 	response, ok := encoding.(map[string]interface{})
 	if !ok {
-		log.Println("Error: Decoded response is not a map[string]interface{}")
-		return 0, nil
-	}
-
-	_, ok = response["interval"]
-	if !ok {
-		log.Println("Error: 'interval' field not found")
+		log.Error("Decoded response is not a map[string]interface{}")
 		return 0, nil
 	}
 
 	interval, ok := response["interval"].(int)
 	if !ok {
-		log.Println("Error: 'interval' field is not an int")
-		return 0, nil
-	}
-
-	_, ok = response["peers"]
-	if !ok {
-		log.Println("Error: 'peers' field not found")
+		log.Error("Error: 'interval' field is missing or not an int")
 		return 0, nil
 	}
 
 	peersStr, ok := response["peers"].(string)
 	if !ok {
-		log.Println("Error: 'peers' field is not a string")
+		log.Error("Error: 'peers' field is missing or not a string")
 		return 0, nil
 	}
 
 	bytes := []byte(peersStr)
 	if len(bytes)%6 != 0 {
-		log.Println("Error: 'peers' string length is not a multiple of 6")
+		log.Error("Error: 'peers' string length is not a multiple of 6")
 		return 0, nil
 	}
 
 	peers := make([]client.Client, 0, len(bytes)/6)
 	for i := 0; i < len(bytes)/6; i++ {
 		peerBytes := bytes[i*6 : (i+1)*6]
-		log.Printf("Extracting peer %d: %s", i, hex.EncodeToString(peerBytes))
+		log.Tracef("Extracting peer %d: %s", i, hex.EncodeToString(peerBytes))
 		ip, port, err := parsePeers(peerBytes)
 		if err != nil {
-			log.Printf("Error converting bytes to PeerAddress: %v", err)
+			log.Warnf("Error converting bytes to PeerAddress: %v", err)
 			continue
 		}
 		peers = append(peers, client.New(ip, port))
 	}
 
-	log.Printf("Successfully extracted %d peers", len(peers))
+	log.Infof("Successfully extracted %d peers", len(peers))
 	return interval, peers
 }
 
@@ -131,5 +122,6 @@ func parsePeers(data []byte) (net.IP, uint16, error) {
 	ip := net.IP(data[:4])
 	port := binary.BigEndian.Uint16(data[4:])
 
+	log.Debugf("Parsed peer: IP=%s, Port=%d", ip.String(), port)
 	return ip, port, nil
 }
