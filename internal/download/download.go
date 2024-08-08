@@ -24,7 +24,7 @@ type PieceProgress struct {
 func (p *PieceProgress) validatePiece() error {
 	hash := sha1.Sum(p.Data)
 	if !bytes.Equal(hash[:], p.Hash[:]) {
-		return fmt.Errorf("Hashes are not matching:\n Expected: %x,\n Received: %x.\n", p.Hash, hash)
+		return fmt.Errorf("hashes are not matching:\t Expected: %x,\t Received: %x.\t", p.Hash, hash)
 	}
 	return nil
 }
