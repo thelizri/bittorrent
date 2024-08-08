@@ -112,6 +112,27 @@ func (t *Torrent) Log() {
 	log.Infof("Left: %d bytes\n", t.Left)
 }
 
+func (t *Torrent) Print() {
+	fmt.Printf("Torrent Details:\n")
+	fmt.Printf("Tracker URL: %s\n", t.Announce)
+	fmt.Printf("Info Hash: %s\n", hex.EncodeToString(t.InfoHash[:]))
+	if t.Comment != "" {
+		fmt.Printf("Comment: %s\n", t.Comment)
+	}
+	if t.Creator != "" {
+		fmt.Printf("Creator: %s\n", t.Creator)
+	}
+	if t.Date != 0 {
+		fmt.Printf("Creation Date: %d\n", t.Date)
+	}
+	t.infoDictionary.print()
+	fmt.Printf("Peer ID: %s\n", hex.EncodeToString(t.PeerID[:]))
+	fmt.Printf("Port: %d\n", t.Port)
+	fmt.Printf("Uploaded: %d bytes\n", t.Uploaded)
+	fmt.Printf("Downloaded: %d bytes\n", t.Downloaded)
+	fmt.Printf("Left: %d bytes\n", t.Left)
+}
+
 func (t *Torrent) GetPieceLength(index int) int {
 	return t.infoDictionary.GetPieceLength(index)
 }

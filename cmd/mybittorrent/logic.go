@@ -32,7 +32,7 @@ func printTorrentInfo(filePath string) {
 	log.Infof("Opening torrent file: %s", filePath)
 	torrent := torrent.Open(filePath)
 	log.Infof("Printing torrent info")
-	torrent.Log()
+	torrent.Print()
 	fmt.Printf("Torrent info for %s has been printed.\n", filePath)
 }
 

@@ -135,3 +135,26 @@ func (f *torrentDictionary) log() {
 		}
 	}
 }
+
+func (f *torrentDictionary) print() {
+	fmt.Printf("\tFile Details:\n")
+	fmt.Printf("\tName: %s\n", f.Name)
+	fmt.Printf("\tType: %s\n", f.Type)
+	fmt.Printf("\tFile Length: %d bytes\n", f.FileLength)
+	fmt.Printf("\tPiece Length: %d bytes\n", f.PieceLength)
+	fmt.Printf("\tLast Piece Length: %d bytes\n", f.LastPieceLength)
+	fmt.Printf("\tNumber of Pieces: %d\n", f.NumberOfPieces)
+	if f.NumberOfPieces < 10 {
+		log.Info("\tPiece Hashes:\n")
+		for i, hash := range f.PieceHashes {
+			fmt.Printf("\t\tPiece %d: %x\n", i, hash)
+		}
+	}
+
+	if f.Type == MULTI {
+		log.Info("\tFiles:\n")
+		for _, file := range f.Files {
+			fmt.Printf("\t\tPath: %s, Length: %d bytes\n", fmt.Sprintf("%v", file.Path), file.Length)
+		}
+	}
+}
