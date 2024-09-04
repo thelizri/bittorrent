@@ -13,12 +13,44 @@ func decodeString(bencode string, start int) (result string, index int, err erro
 			break
 		}
 	}
+
 	lengthStr := bencode[start:firstColonIndex]
 	length, err := strconv.Atoi(lengthStr)
+
 	if err != nil {
 		return "", 0, err
 	}
+
 	index = firstColonIndex + 1 + length
+
+	if index > len(bencode) {
+		return "", 0, fmt.Errorf("invalid bencoded string: length exceeds available data")
+	}
+
+	if index < len(bencode) {
+		nextChar := bencode[index]
+
+		if nextChar != 'i' && nextChar != 'l' && nextChar != 'd' && nextChar != 'e' && (nextChar < '0' || nextChar > '9') {
+			return "", 0, fmt.Errorf("invalid bencoded string: length mismatch")
+		}
+
+		if nextChar >= '0' && nextChar <= '9' {
+			colonFound := false
+			for i := index + 1; i < len(bencode); i++ {
+				if bencode[i] == ':' {
+					colonFound = true
+					break
+				}
+				if bencode[i] < '0' || bencode[i] > '9' {
+					return "", 0, fmt.Errorf("invalid bencoded string: length mismatch")
+				}
+			}
+			if !colonFound {
+				return "", 0, fmt.Errorf("invalid bencoded string: length mismatch")
+			}
+		}
+	}
+
 	return bencode[firstColonIndex+1 : index], index, nil
 }
 
