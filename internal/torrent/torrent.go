@@ -39,7 +39,7 @@ func Open(filePath string) *Torrent {
 		log.Fatal(fmt.Sprintf("Error reading file: %v\n", err))
 	}
 
-	decoding, _, err := bencode.Decode(string(bytes), 0)
+	decoding, err := bencode.Decode(string(bytes))
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error decoding file: %v\n", err))
 	}

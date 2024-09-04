@@ -19,7 +19,7 @@ import (
 )
 
 func decodeBencodedString(encoding string) {
-	decoded, _, err := bencode.Decode(encoding, 0)
+	decoded, err := bencode.Decode(encoding)
 	if err != nil {
 		log.Fatalf("Error decoding bencode: %v", err)
 	}

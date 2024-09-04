@@ -54,7 +54,7 @@ func decodeList(bencode string, start int) (list []interface{}, index int, err e
 		}
 
 		var result interface{}
-		result, index, err = Decode(bencode, index)
+		result, index, err = decode(bencode, index)
 		if err != nil {
 			return nil, index, err
 		}
@@ -81,7 +81,7 @@ func decodeDict(bencode string, start int) (dict map[string]interface{}, index i
 
 		// Get key
 		var key, value interface{}
-		key, index, err = Decode(bencode, index)
+		key, index, err = decode(bencode, index)
 		if err != nil {
 			return nil, index, err
 		}
@@ -93,7 +93,7 @@ func decodeDict(bencode string, start int) (dict map[string]interface{}, index i
 		}
 
 		// Get value
-		value, index, err = Decode(bencode, index)
+		value, index, err = decode(bencode, index)
 		if err != nil {
 			return nil, index, err
 		}
@@ -104,7 +104,7 @@ func decodeDict(bencode string, start int) (dict map[string]interface{}, index i
 	return dict, index + 1, nil
 }
 
-func Decode(bencode string, start int) (result interface{}, index int, err error) {
+func decode(bencode string, start int) (result interface{}, index int, err error) {
 	switch bencode[start] {
 	case 'i':
 		return decodeInt(bencode, start)
@@ -115,4 +115,9 @@ func Decode(bencode string, start int) (result interface{}, index int, err error
 	default:
 		return decodeString(bencode, start)
 	}
+}
+
+func Decode(bencode string) (result interface{}, err error) {
+	result, _, err = decode(bencode, 0)
+	return result, err
 }
