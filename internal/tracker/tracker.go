@@ -24,7 +24,7 @@ const (
 
 func GET(torrent *torrent.Torrent) (int, []client.Client) {
 	baseURL := createTrackerRequest(torrent)
-	body := sendTrackerRequest(baseURL)
+	body := sendTrackerRequest(http.DefaultClient, baseURL)
 	interval, peers := parseResponse(body)
 	return interval, peers
 }
@@ -52,9 +52,9 @@ func createTrackerRequest(torrent *torrent.Torrent) *url.URL {
 	return baseURL
 }
 
-func sendTrackerRequest(baseURL *url.URL) []byte {
+func sendTrackerRequest(client *http.Client, baseURL *url.URL) []byte {
 	// Make GET request
-	resp, err := http.Get(baseURL.String())
+	resp, err := client.Get(baseURL.String())
 	if err != nil {
 		log.Errorf("Error making GET request: %v", err)
 		return nil
