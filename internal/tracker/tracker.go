@@ -67,13 +67,13 @@ func sendTrackerRequest(baseURL *url.URL) []byte {
 
 func parseResponse(body []byte) (int, []client.Client) {
 	// Decoding Body
-	encoding, err := bencode.Decode(string(body))
+	decoded, err := bencode.Decode(string(body))
 	if err != nil {
 		log.Errorf("Error decoding body: %v", err)
 		return 0, nil
 	}
 
-	response, ok := encoding.(map[string]interface{})
+	response, ok := decoded.(map[string]interface{})
 	if !ok {
 		log.Error("Decoded response is not a map[string]interface{}")
 		return 0, nil
