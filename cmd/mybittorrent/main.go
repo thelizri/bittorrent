@@ -53,7 +53,6 @@ func init() {
 		log.Fatalf("Invalid log level: %v", err)
 	}
 	log.SetLevel(level)
-	fmt.Printf("%s", logLevel)
 }
 
 func main() {
