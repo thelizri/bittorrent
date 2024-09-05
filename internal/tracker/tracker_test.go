@@ -2,10 +2,10 @@ package tracker
 
 import (
 	"encoding/binary"
+	"karlan/torrent/internal/torrent"
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strconv"
 	"testing"
 )
@@ -24,7 +24,7 @@ func TestGET(t *testing.T) {
 
 	var wantPeerAddresses []string
 
-	getTorrentAsBytes := func() []byte {
+	getTrackerAsBytes := func() []byte {
 		var peersBytes []byte
 
 		for _, p := range peersIpAndPort {
@@ -41,19 +41,45 @@ func TestGET(t *testing.T) {
 		return append(finalBytes, 'e')
 	}
 
-	getTestServer := func(torrentAsBytes []byte) *httptest.Server {
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write(torrentAsBytes)
-		}))
+	getTestServer := func(trackerAsBytes []byte) *httptest.Server {
+		getExpectedQueryHandler := func(expectedQuery string, handler http.HandlerFunc) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				expected := r.URL.Query().Encode()
+
+				if expected == expectedQuery {
+					handler(w, r)
+				} else {
+					t.Error("Expected and actual query mismatch")
+				}
+			}
+		}
+
+		expectedQuery := "compact=1&downloaded=2048&info_hash=%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F%10%11%12%13%14&left=4096&peer_id=%FF%EE%DD%CC%BB%AA%99%88wfUD3%22%11%00%99%88wf&port=6881&uploaded=1024"
+
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write(trackerAsBytes)
+		})
+
+		return httptest.NewServer(getExpectedQueryHandler(expectedQuery, handler))
 	}
 
-	torrentAsBytes := getTorrentAsBytes()
-	ts := getTestServer(torrentAsBytes)
-	baseURL, err := url.Parse(ts.URL)
-
-	if err != nil {
-		t.Errorf("Cannot parse URL: %s", ts.URL)
+	trackerAsBytes := getTrackerAsBytes()
+	ts := getTestServer(trackerAsBytes)
+	torrent := &torrent.Torrent{
+		Announce:   ts.URL,
+		InfoHash:   [20]byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14},
+		PeerID:     [20]byte{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00, 0x99, 0x88, 0x77, 0x66},
+		Port:       6881,
+		Uploaded:   1024,
+		Downloaded: 2048,
+		Left:       4096,
 	}
+	baseURL := createTrackerRequest(torrent)
+	// baseURL, err := url.Parse(ts.URL)
+	//
+	// if err != nil {
+	// 	t.Errorf("Cannot parse URL: %s", ts.URL)
+	// }
 
 	body := sendTrackerRequest(ts.Client(), baseURL)
 	interval, peers := parseResponse(body)
