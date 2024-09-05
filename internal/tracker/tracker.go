@@ -16,9 +16,15 @@ import (
 	"karlan/torrent/internal/torrent"
 )
 
+const (
+	PeerIpBytesCount   = 4
+	PeerPortBytesCount = 2
+	PeerSize           = PeerIpBytesCount + PeerPortBytesCount
+)
+
 func GET(torrent *torrent.Torrent) (int, []client.Client) {
 	baseURL := createTrackerRequest(torrent)
-	body := sendTrackerRequest(baseURL)
+	body := sendTrackerRequest(http.DefaultClient, baseURL)
 	interval, peers := parseResponse(body)
 	return interval, peers
 }
@@ -46,9 +52,9 @@ func createTrackerRequest(torrent *torrent.Torrent) *url.URL {
 	return baseURL
 }
 
-func sendTrackerRequest(baseURL *url.URL) []byte {
+func sendTrackerRequest(client *http.Client, baseURL *url.URL) []byte {
 	// Make GET request
-	resp, err := http.Get(baseURL.String())
+	resp, err := client.Get(baseURL.String())
 	if err != nil {
 		log.Errorf("Error making GET request: %v", err)
 		return nil
@@ -67,13 +73,13 @@ func sendTrackerRequest(baseURL *url.URL) []byte {
 
 func parseResponse(body []byte) (int, []client.Client) {
 	// Decoding Body
-	encoding, err := bencode.Decode(string(body))
+	decoded, err := bencode.Decode(string(body))
 	if err != nil {
 		log.Errorf("Error decoding body: %v", err)
 		return 0, nil
 	}
 
-	response, ok := encoding.(map[string]interface{})
+	response, ok := decoded.(map[string]interface{})
 	if !ok {
 		log.Error("Decoded response is not a map[string]interface{}")
 		return 0, nil
@@ -91,15 +97,16 @@ func parseResponse(body []byte) (int, []client.Client) {
 		return 0, nil
 	}
 
-	bytes := []byte(peersStr)
-	if len(bytes)%6 != 0 {
+	peersBytes := []byte(peersStr)
+	if len(peersBytes)%PeerSize != 0 {
 		log.Error("Error: 'peers' string length is not a multiple of 6")
 		return 0, nil
 	}
 
-	peers := make([]client.Client, 0, len(bytes)/6)
-	for i := 0; i < len(bytes)/6; i++ {
-		peerBytes := bytes[i*6 : (i+1)*6]
+	peersCount := len(peersBytes) / PeerSize
+	peers := make([]client.Client, 0, peersCount)
+	for i := 0; i < peersCount; i++ {
+		peerBytes := peersBytes[i*PeerSize : (i+1)*PeerSize]
 		log.Tracef("Extracting peer %d: %s", i, hex.EncodeToString(peerBytes))
 		ip, port, err := parsePeers(peerBytes)
 		if err != nil {
@@ -115,12 +122,12 @@ func parseResponse(body []byte) (int, []client.Client) {
 
 // bytesToPeerAddress converts a 6-byte array to an IP address and port.
 func parsePeers(data []byte) (net.IP, uint16, error) {
-	if len(data) != 6 {
-		return nil, 0, fmt.Errorf("data must be exactly 6 bytes long")
+	if len(data) != PeerSize {
+		return nil, 0, fmt.Errorf("data must be exactly %d bytes long", PeerSize)
 	}
 
-	ip := net.IP(data[:4])
-	port := binary.BigEndian.Uint16(data[4:])
+	ip := net.IP(data[:PeerIpBytesCount])
+	port := binary.BigEndian.Uint16(data[PeerIpBytesCount:])
 
 	log.Debugf("Parsed peer: IP=%s, Port=%d", ip.String(), port)
 	return ip, port, nil
