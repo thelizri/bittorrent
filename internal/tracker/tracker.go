@@ -67,7 +67,7 @@ func sendTrackerRequest(baseURL *url.URL) []byte {
 
 func parseResponse(body []byte) (int, []client.Client) {
 	// Decoding Body
-	encoding, _, err := bencode.Decode(string(body), 0)
+	encoding, err := bencode.Decode(string(body))
 	if err != nil {
 		log.Errorf("Error decoding body: %v", err)
 		return 0, nil
