@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -11,6 +13,17 @@ import (
 var logFile *os.File
 
 func init() {
+	var logLevel string
+	flag.StringVar(&logLevel, "loglevel", "trace", "set the log level (trace, debug, info, warn, error, fatal, panic)")
+
+	args := os.Args[1:]
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-loglevel=") {
+			logLevel = strings.TrimPrefix(arg, "-loglevel=")
+			break
+		}
+	}
+
 	// Open a file for logging
 	var err error
 	logDir := "logs"
@@ -34,8 +47,13 @@ func init() {
 	// Output to the log file instead of the default stderr
 	log.SetOutput(logFile)
 
-	// Only log the warning severity or above.
-	log.SetLevel(log.TraceLevel)
+	// Set the log level based on the flag
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		log.Fatalf("Invalid log level: %v", err)
+	}
+	log.SetLevel(level)
+	fmt.Printf("%s", logLevel)
 }
 
 func main() {
