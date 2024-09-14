@@ -5,6 +5,8 @@ import (
 	"net"
 	"strconv"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -48,6 +50,13 @@ func TestNew(t *testing.T) {
 }
 
 func TestStringToClient(t *testing.T) {
+	tests := []struct {
+		addr string
+		want Client
+	}{
+		{correctAddrStr, New(correctIp, uint16(correctPort))},
+	}
+
 	failingTests := []struct {
 		addr, expectedError string
 	}{
@@ -56,6 +65,19 @@ func TestStringToClient(t *testing.T) {
 		{"178.62.82.89:", "invalid port number"},
 		{"178.62.82.89:-1", "port number must be between 0 and 65535"},
 		{"178.62.82.89:65536", "port number must be between 0 and 65535"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.addr, func(t *testing.T) {
+			have, err := StringToClient(tt.addr)
+			if err != nil {
+				t.Errorf("Error: %s", err.Error())
+			}
+
+			if !cmp.Equal(have, tt.want) {
+				t.Errorf("Client inequality: have %v, expected %v", have, tt.want)
+			}
+		})
 	}
 
 	for _, tt := range failingTests {
