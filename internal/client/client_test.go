@@ -8,15 +8,44 @@ import (
 )
 
 const (
-	CorrectIpStr = "178.62.82.89"
+	CorrectIpStr   = "178.62.82.89"
 	CorrectPortStr = "51470"
 )
 
 var (
 	correctAddrStr = fmt.Sprintf("%s:%s", CorrectIpStr, CorrectPortStr)
-	correctIp = net.ParseIP(CorrectIpStr)
+	correctIp      = net.ParseIP(CorrectIpStr)
 	correctPort, _ = strconv.Atoi(CorrectPortStr)
 )
+
+func TestNew(t *testing.T) {
+	have := New(correctIp, uint16(correctPort))
+	want := &Client{Choked: true, IP: correctIp, Port: uint16(correctPort)}
+
+	if !have.IP.Equal(want.IP) {
+		t.Errorf("IP inequality: have %s, expected %s", have.IP.String(), want.IP.String())
+	}
+
+	if have.Choked != want.Choked {
+		t.Errorf("Choked inequality: have %v, expected %v", have.Choked, want.Choked)
+	}
+
+	if have.Port != want.Port {
+		t.Errorf("Port inequality: have %d, expected %d", have.Port, want.Port)
+	}
+
+	if have.Conn != want.Conn {
+		t.Errorf("Conn should be uninitialized but is initialized")
+	}
+
+	if have.PeerID != want.PeerID {
+		t.Errorf("PeerID should be uninitialized but is initialized")
+	}
+
+	if have.Bitfield != want.Bitfield {
+		t.Errorf("Bitfield should be uninitialized but is initialized")
+	}
+}
 
 func TestStringToClient(t *testing.T) {
 	failingTests := []struct {
