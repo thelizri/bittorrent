@@ -2,7 +2,20 @@ package client
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"testing"
+)
+
+const (
+	CorrectIpStr = "178.62.82.89"
+	CorrectPortStr = "51470"
+)
+
+var (
+	correctAddrStr = fmt.Sprintf("%s:%s", CorrectIpStr, CorrectPortStr)
+	correctIp = net.ParseIP(CorrectIpStr)
+	correctPort, _ = strconv.Atoi(CorrectPortStr)
 )
 
 func TestStringToClient(t *testing.T) {
